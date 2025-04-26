@@ -1,20 +1,73 @@
 package com.example.literalkids
 
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.compose.runtime.Composable
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.literalkids.navigation.Screen
+import com.example.literalkids.ui.AvatarSelectionUI
+import com.example.literalkids.ui.ChildProfileUI
+import com.example.literalkids.ui.LeaderboardUI
+import com.example.literalkids.ui.LoginUI
+import com.example.literalkids.ui.ParentProfileUI
+import com.example.literalkids.ui.ProfileUI
+import com.example.literalkids.ui.RegisterUI
+import com.example.literalkids.ui.SubscriptionUI
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        setContent {
+            MainNavigation()
+        }
+    }
+}
+
+@Composable
+fun MainNavigation() {
+    val navController = rememberNavController()
+
+    NavHost(
+        navController = navController,
+        startDestination = Screen.Login.route
+    ) {
+
+        // Halaman Login
+        composable(Screen.Login.route) {
+            LoginUI(navController = navController)
+        }
+
+        // Halaman Register
+        composable(Screen.Register.route) {
+            RegisterUI(navController = navController)
+        }
+
+        // Halaman Subscription
+        composable(Screen.Subscription.route) {
+            SubscriptionUI(navController = navController)
+        }
+
+        composable(Screen.Profile.route) {
+            ProfileUI(navController = navController)
+        }
+
+        composable(Screen.ParentProfile.route) {
+            ParentProfileUI(navController = navController)
+        }
+
+        composable(Screen.ChildProfile.route) {
+            ChildProfileUI(navController = navController)
+        }
+
+        composable(Screen.AvatarSelection.route) {
+            AvatarSelectionUI(navController = navController)
+        }
+
+        composable(Screen.Leaderboard.route) {
+            LeaderboardUI(navController = navController)
         }
     }
 }
