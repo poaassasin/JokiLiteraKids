@@ -11,6 +11,7 @@ import com.example.literalkids.navigation.Screen
 import com.example.literalkids.ui.AvatarSelectionUI
 import com.example.literalkids.ui.ChildProfileUI
 import com.example.literalkids.ui.LeaderboardUI
+import com.example.literalkids.ui.LibraryScreen
 import com.example.literalkids.ui.LoginUI
 import com.example.literalkids.ui.ParentProfileUI
 import com.example.literalkids.ui.ProfileUI
@@ -68,6 +69,9 @@ fun MainNavigation() {
 
         composable(Screen.Leaderboard.route) {
             LeaderboardUI(navController = navController)
+        }
+        composable(Screen.Perpustakaan.route) {
+            LibraryScreen(navController = navController)
         }
     }
 }

@@ -51,8 +51,8 @@ fun BottomNavigation(
         BottomNavItem(
             icon = Icons.Outlined.Book,
             label = "Perpustakaan",
-            isSelected = false,
-            onClick = {  }
+            isSelected = currentRoute == Screen.Perpustakaan.route,
+            onClick = { onNavigate(Screen.Perpustakaan.route) }
         )
 
         BottomNavItem(
