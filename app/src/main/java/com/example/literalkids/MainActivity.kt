@@ -14,6 +14,10 @@ import com.example.literalkids.ui.LeaderboardUI
 import com.example.literalkids.ui.LoginUI
 import com.example.literalkids.ui.ParentProfileUI
 import com.example.literalkids.ui.ProfileUI
+import com.example.literalkids.ui.QuizResultScreen
+import com.example.literalkids.ui.QuizScreen
+import com.example.literalkids.ui.QuizScreen2
+import com.example.literalkids.ui.QuizScreen3
 import com.example.literalkids.ui.RegisterUI
 import com.example.literalkids.ui.SubscriptionUI
 
@@ -32,7 +36,7 @@ fun MainNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route
+        startDestination = Screen.Quiz.route
     ) {
 
         // Halaman Login
@@ -68,6 +72,22 @@ fun MainNavigation() {
 
         composable(Screen.Leaderboard.route) {
             LeaderboardUI(navController = navController)
+        }
+
+        composable(Screen.Quiz.route) {
+            QuizScreen(navController = navController)
+        }
+
+        composable(Screen.Quiz2.route) {
+            QuizScreen2(navController = navController)
+        }
+
+        composable(Screen.Quiz3.route) {
+            QuizScreen3(navController = navController)
+        }
+
+        composable(Screen.QuizResult.route) {
+            QuizResultScreen(navController = navController)
         }
     }
 }
