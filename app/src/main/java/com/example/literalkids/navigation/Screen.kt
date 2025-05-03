@@ -10,4 +10,8 @@ sealed class Screen(val route: String) {
     object ChildProfile : Screen("child_profile")
     object AvatarSelection : Screen("avatar_selection")
     object Leaderboard : Screen("leaderboard")
+    object Quiz : Screen ("book_quiz1")
+    object Quiz2 : Screen ("book_quiz2")
+    object Quiz3 : Screen ("book_quiz3")
+    object QuizResult : Screen ("quiz_result")
 }
