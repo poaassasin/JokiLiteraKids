@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,14 +33,12 @@ fun QuizScreen(navController: NavController) {
     var showAnswer by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Background Image
         Image(
             painter = painterResource(id = R.drawable.bg_quiz1),
             contentDescription = "background",
             modifier = Modifier.fillMaxSize()
         )
 
-        // Header
         Box(
             modifier = Modifier
                 .width(412.dp)
@@ -50,15 +47,11 @@ fun QuizScreen(navController: NavController) {
                 .padding(top = 1.dp)
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF5AD8FF),
-                            Color(0xFFDE99FF)
-                        )
+                        colors = listOf(Color(0xFF5AD8FF), Color(0xFFDE99FF))
                     )
                 )
         )
 
-        // Title Text with Back Button
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -67,7 +60,6 @@ fun QuizScreen(navController: NavController) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            // Tombol Back
             Image(
                 painter = painterResource(id = R.drawable.tombol_back),
                 contentDescription = "Back",
@@ -76,7 +68,7 @@ fun QuizScreen(navController: NavController) {
                     .height(20.dp)
                     .align(Alignment.CenterVertically)
                     .clickable {
-                        navController.popBackStack() // Kembali ke screen sebelumnya
+                        navController.popBackStack()
                     }
             )
 
@@ -96,7 +88,6 @@ fun QuizScreen(navController: NavController) {
                 .fillMaxWidth()
                 .padding(top = 126.dp, end = 16.dp)
         ) {
-            // Box Soal
             Box(
                 modifier = Modifier
                     .width(100.dp)
@@ -134,18 +125,6 @@ fun QuizScreen(navController: NavController) {
                         .padding(end = 15.dp)
                 )
             }
-
-            // Tombol suara
-            Image(
-                painter = painterResource(id = R.drawable.sound_quiz1),
-                contentDescription = "sound1",
-                modifier = Modifier
-                    .size(40.dp)
-                    .align(Alignment.TopEnd)
-                    .clickable {
-                        println("Tombol suara diklik!")
-                    }
-            )
 
             StarRating(2)
         }
@@ -215,7 +194,10 @@ fun QuizScreen(navController: NavController) {
                                         color = if (isSelected) Color.Gray else bgColor,
                                         shape = RoundedCornerShape(20.dp)
                                     )
-                                    .clickable { selectedAnswer = answer }
+                                    .clickable {
+                                        println("Jawaban dipilih: $answer")
+                                        selectedAnswer = answer
+                                    }
                                     .padding(horizontal = 4.dp, vertical = 4.dp),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -237,8 +219,15 @@ fun QuizScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Button(
-                        onClick = { showAnswer = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5AD8FF)),
+                        onClick = {
+                            println("Tombol cek jawaban ditekan")
+                            showAnswer = true
+                        },
+                        enabled = selectedAnswer != null,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF5AD8FF),
+                            disabledContainerColor = Color.LightGray
+                        ),
                         modifier = Modifier
                             .width(296.dp)
                             .height(46.dp)
@@ -252,7 +241,7 @@ fun QuizScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(26.dp))
 
                     if (showAnswer && selectedAnswer != null) {
-                        val correctAnswer = "Menggunakan Perangkap Jebakan"
+                        val correctAnswer = "Kancil Mencuri Ketimun"
                         val isCorrect = selectedAnswer == correctAnswer
                         val answerText = if (isCorrect) {
                             "Jawaban: Benar \nPak Tani Menangkap Kancil Dengan Perangkap."
@@ -273,7 +262,6 @@ fun QuizScreen(navController: NavController) {
             }
         }
 
-        // Bottom Panel
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -332,7 +320,8 @@ fun QuizScreen(navController: NavController) {
 
                 Button(
                     onClick = {
-                        navController.navigate(Screen.Quiz.route) // Ganti sesuai ke mana kamu ingin lanjut
+                        println("Tombol lanjut diklik")
+                        navController.navigate(Screen.Quiz.route)
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5AD8FF)),
                     shape = RoundedCornerShape(50),
@@ -375,10 +364,16 @@ fun StarRating(score: Int, max: Int = 3) {
         Image(
             painter = painterResource(id = R.drawable.next),
             contentDescription = "next1",
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier
+                .size(20.dp)
+                .clickable {
+                    println("Icon next diklik")
+                    // Tambahkan aksi navigasi atau logika lainnya
+                }
         )
     }
 }
+
 
 
 @Preview(showBackground = true, showSystemUi = true)

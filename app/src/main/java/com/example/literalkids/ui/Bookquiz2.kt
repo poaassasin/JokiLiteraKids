@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -67,7 +66,6 @@ fun QuizScreen2(navController: NavController) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            // Tombol Back
             Image(
                 painter = painterResource(id = R.drawable.tombol_back),
                 contentDescription = "Back",
@@ -76,7 +74,7 @@ fun QuizScreen2(navController: NavController) {
                     .height(20.dp)
                     .align(Alignment.CenterVertically)
                     .clickable {
-                        navController.popBackStack() // Kembali ke screen sebelumnya
+                        navController.popBackStack()
                     }
             )
 
@@ -135,7 +133,6 @@ fun QuizScreen2(navController: NavController) {
                 )
             }
 
-            // Tombol suara
             Image(
                 painter = painterResource(id = R.drawable.sound_quiz1),
                 contentDescription = "sound1",
@@ -215,7 +212,9 @@ fun QuizScreen2(navController: NavController) {
                                         color = if (isSelected) Color.Gray else bgColor,
                                         shape = RoundedCornerShape(20.dp)
                                     )
-                                    .clickable { selectedAnswer = answer }
+                                    .clickable {
+                                        selectedAnswer = answer
+                                    }
                                     .padding(horizontal = 4.dp, vertical = 4.dp),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -242,6 +241,9 @@ fun QuizScreen2(navController: NavController) {
                         modifier = Modifier
                             .width(296.dp)
                             .height(46.dp)
+                            .clickable {
+                                showAnswer = true
+                            }
                     ) {
                         Text(
                             text = "Cek Jawaban",

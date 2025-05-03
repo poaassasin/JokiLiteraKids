@@ -129,7 +129,7 @@ fun QuizScreen3(navController: NavHostController) {
                 }
 
                 Text(
-                    text = "Soal 1",
+                    text = "Soal 3",
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
