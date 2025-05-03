@@ -23,12 +23,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.R
 
 
 
 @Composable
-fun SubscriptionUI(navController: NavController) {
+fun SubscriptionUI(navController: NavHostController) {
     Log.d("NAV_CHECK", "Masuk ke SubscriptionUI")
     val gradientBackground = Brush.verticalGradient(
         colors = listOf(Color(0xFF7BDDFB), Color(0xFFD7A5FF))
@@ -303,3 +305,4 @@ fun FeatureItem(text: String) {
         )
     }
 }
+
