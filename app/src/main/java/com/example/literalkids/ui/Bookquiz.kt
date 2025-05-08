@@ -321,7 +321,7 @@ fun QuizScreen(navController: NavController) {
                 Button(
                     onClick = {
                         println("Tombol lanjut diklik")
-                        navController.navigate(Screen.Quiz.route)
+                        navController.navigate(Screen.Quiz2.route)
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5AD8FF)),
                     shape = RoundedCornerShape(50),

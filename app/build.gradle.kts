@@ -72,6 +72,8 @@ dependencies {
     implementation("androidx.compose.ui:ui:1.6.2")
     implementation("androidx.compose.ui:ui-tooling-preview:1.6.2")
     debugImplementation("androidx.compose.ui:ui-tooling:1.6.2")
+    implementation ("com.google.accompanist:accompanist-pager:0.32.0")
+    implementation ("com.google.accompanist:accompanist-pager-indicators:0.32.0")
 
     // Navigation Compose (PENTING!)
     implementation("androidx.navigation:navigation-compose:2.7.7")

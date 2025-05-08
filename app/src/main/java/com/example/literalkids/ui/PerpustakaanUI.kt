@@ -65,7 +65,7 @@ fun LibraryScreen(navController: NavController) {
                     .size(36.dp)
                     .clip(CircleShape)
                     .background(Color.White)
-                    .clickable { /* TODO: Search action */ }
+                    .clickable { navController.navigate(Screen.Search.route) }
                     .align(Alignment.CenterEnd),
                 contentAlignment = Alignment.Center
             ) {
@@ -214,7 +214,9 @@ fun StoryShelf(
                     Image(
                         painter = painterResource(id = R.drawable.add_button),
                         contentDescription = "Tambah",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable { onAddClicked() }
                     )
                 }
             }

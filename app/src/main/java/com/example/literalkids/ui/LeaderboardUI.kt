@@ -3,6 +3,7 @@ package com.example.literalkids.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -55,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import com.example.literalkids.R
+import com.example.literalkids.navigation.Screen
 import kotlinx.coroutines.delay
 
 data class LeaderboardUser(
@@ -134,7 +136,10 @@ fun LeaderboardUI(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.White
+                            tint = Color.White,
+                            modifier = modifier
+                                .clickable { navController.navigate(Screen.Homepage.route)
+                            }
                         )
                     }
                 },

@@ -197,6 +197,52 @@ fun ProfileUI(
                     onEditClick = { navController.navigate(Screen.ParentProfile.route) }
                 )
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(Color(0xFF7BDDFB), Color(0xFFD7A5FF))
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .padding(16.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.sc_robot),
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text("Yay kamu sedang berlangganan!", color = Color.White)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Paket Hebat", color = Color.White, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Periode Berlangganan:" ,color = Color.White, fontSize = 10.sp)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("10/04/2025 - 10/07/2025", color = Color.White, fontSize = 10.sp)
+
+                        }
+                        Spacer(modifier = Modifier.weight(1f)) // mendorong ke kanan
+
+                        Text(
+                            text = "Perbarui Langganan",
+                            fontSize = 8.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .clickable {
+                                     navController.navigate(Screen.Subscription.route)
+                                }
+                                .padding(start = 8.dp)
+                        )
+                    }
+                }
+
             }
         } else {
             Button(

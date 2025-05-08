@@ -26,7 +26,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.R
-
+import com.example.literalkids.navigation.Screen
 
 
 @Composable
@@ -59,7 +59,7 @@ fun SubscriptionUI(navController: NavHostController) {
                     modifier = Modifier
                         .size(24.dp)
                         .clickable {
-                            navController.popBackStack()
+                            navController.navigate(Screen.Profile.route)
                         }
                 )
                 Spacer(modifier = Modifier.width(12.dp))

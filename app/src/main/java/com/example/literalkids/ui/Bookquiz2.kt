@@ -334,7 +334,7 @@ fun QuizScreen2(navController: NavController) {
 
                 Button(
                     onClick = {
-                        navController.navigate(Screen.Quiz.route) // Ganti sesuai ke mana kamu ingin lanjut
+                        navController.navigate(Screen.Quiz3.route) // Ganti sesuai ke mana kamu ingin lanjut
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5AD8FF)),
                     shape = RoundedCornerShape(50),

@@ -133,7 +133,7 @@ fun LoginUI(navController: NavController) {
             Button(
                 onClick = {
                     Log.d("NAV_CHECK", "Login ditekan")
-                    navController.navigate(Screen.Subscription.route)
+                    navController.navigate(Screen.OnBoarding1.route)
                 },
                 modifier = Modifier
                     .fillMaxWidth()

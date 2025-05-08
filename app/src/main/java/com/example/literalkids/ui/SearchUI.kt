@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.R
+import com.example.literalkids.navigation.Screen
 
 @Composable
 fun SearchUI(navController: NavHostController) {
@@ -108,7 +109,9 @@ fun SearchUI(navController: NavHostController) {
                 Text(
                     text = "Batalkan",
                     color = Color.Gray,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable{ navController.popBackStack()}
+
                 )
             }
         }
@@ -126,7 +129,7 @@ fun SearchUI(navController: NavHostController) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     row.forEach { (genre, icon) ->
                         GenreItem(genre = genre, icon = icon) {
-                            navController.navigate("genre/$genre")
+                            navController.navigate(Screen.GenreSelector.createRoute(genre))
                         }
                     }
                 }
