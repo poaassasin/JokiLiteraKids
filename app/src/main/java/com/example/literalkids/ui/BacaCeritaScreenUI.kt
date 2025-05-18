@@ -16,57 +16,39 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
-
-data class CeritaPage(
-    val title: String,
-    val text: String,
-    val backgroundRes: Int
-)
+import com.example.literalkids.viewmodel.BacaCeritaViewModel
+import com.example.literalkids.viewmodel.CeritaPage
 
 @Composable
-fun BacaCeritaScreenUI(navController: NavController, context: Context = LocalContext.current) {
-    val ceritaPages = listOf(
-        CeritaPage(
-            "1 - Rasa Lapar Ditengah Hutan",
-            "Si Kancil yang cerdik menyelinap ke kebun petani untuk mencuri ketimun segar. Namun, ia tertangkap jebakan yang dipasang oleh petani. Dengan akalnya, Kancil berpura-pura menyesal dan menipu petani hingga akhirnya berhasil melarikan diri.",
-            R.drawable.bg_ilustrasi1
-        ),
-        CeritaPage(
-            "2 - Rencana Diam-Diam",
-            "Si Kancil Kancil tahu kebun itu milik Pak Tani. Tapi rasa lapar membuatnya nekat. Malam hari, saat hutan mulai sunyi, Kancil menyelinap masuk lewat celah pagar. Ia memetik satu ketimun besar dan melahapnya cepat-cepat. “Hmmm… manis dan segar!” katanya senang. Ia kembali ke hutan dengan perut kenyang. Besoknya, Kancil datang lagi, dan lagi. Ia bahkan mulai membawa teman-temannya diam-diam.",
-            R.drawable.bg_ilustrasi2
-        ),
-        CeritaPage(
-            "3 - Pak Tani Curiga",
-            "Setiap pagi, Pak Tani merasa jumlah ketimunnya semakin berkurang. “Siapa yang mencuri hasil kebunku?” gerutunya. Lalu ia membuat rencana. Ia memasang jebakan dari jaring dan tali di tengah kebun, di sekitar ketimun paling besar. “Kalau pencuri datang lagi, pasti tertangkap!” ujar Pak Tani yakin.",
-            R.drawable.bg_ilustrasi3
-        ),
-        CeritaPage(
-            "4 - Tertangkap",
-            "Malam pun tiba. Kancil kembali, kali ini sendirian. Ia melompat girang saat melihat ketimun favoritnya masih ada. “Ini pasti hadiah untukku,” katanya bangga. Tapi begitu ia melangkah... ZAPP! Kakinya terjerat jaring! Kancil panik dan berusaha melepaskan diri, tapi sia-sia. Ia terjebak hingga pagi.",
-            R.drawable.bg_ilustrasi4
-        ),
-        CeritaPage(
-            "5 - Belajar Dari Kesalahan",
-            "Pak Tani datang membawa keranjang. Ia terkejut melihat seekor kancil kecil yang gemetar ketakutan. Namun Pak Tani tidak marah. “Kamu lapar, ya? Tapi mencuri itu tidak benar,” katanya lembut. Ia melepaskan Kancil, lalu berkata, “Lain kali, mintalah baik-baik.” Sejak saat itu, Kancil tak pernah mencuri lagi. Ia belajar mencari makanan dengan cara yang jujur dan mulai menanam ketimun sendiri.",
-            R.drawable.bg_ilustrasi5
-        )
-    )
+fun BacaCeritaScreenUI(
+    navController: NavController,
+    context: Context = LocalContext.current,
+    viewModel: BacaCeritaViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val currentCerita = uiState.currentCerita
 
-    var currentPage by remember { mutableStateOf(0) }
-    val currentCerita = ceritaPages[currentPage]
-    var isSpeaking by remember { mutableStateOf(false) }
-    var showFinishDialog by remember { mutableStateOf(false) }
-
+    // Inisialisasi TTS di UI karena butuh Context
     val tts = remember {
         TextToSpeech(context) {}.apply {
             language = java.util.Locale("id", "ID")
         }
     }
 
+    // Sinkronkan TTS dengan ViewModel
+    LaunchedEffect(uiState.isSpeaking, currentCerita) {
+        if (uiState.isSpeaking) {
+            tts.speak(currentCerita.text, TextToSpeech.QUEUE_FLUSH, null, null)
+        } else {
+            tts.stop()
+        }
+    }
+
+    // Dispose TTS saat Composable dihancurkan
     DisposableEffect(Unit) {
         onDispose {
             tts.stop()
@@ -86,7 +68,7 @@ fun BacaCeritaScreenUI(navController: NavController, context: Context = LocalCon
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 80.dp) // memberi ruang untuk page indicator
+                .padding(bottom = 80.dp) // Ruang untuk page indicator
                 .verticalScroll(rememberScrollState())
         ) {
             // Header
@@ -106,7 +88,7 @@ fun BacaCeritaScreenUI(navController: NavController, context: Context = LocalCon
                         contentDescription = "Back",
                         modifier = Modifier
                             .size(24.dp)
-                            .clickable { navController.navigate(Screen.Profile.route) }
+                            .clickable { navController.navigate(Screen.HomeBacaCerita.route) }
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
@@ -172,7 +154,7 @@ fun BacaCeritaScreenUI(navController: NavController, context: Context = LocalCon
                 Spacer(modifier = Modifier.width(10.dp))
 
                 IconButton(
-                    onClick = { /* Bookmark */ },
+                    onClick = { /* TODO: Bookmark */ },
                     modifier = Modifier
                         .size(40.dp)
                         .background(Color.White, CircleShape)
@@ -188,22 +170,14 @@ fun BacaCeritaScreenUI(navController: NavController, context: Context = LocalCon
                 Spacer(modifier = Modifier.width(10.dp))
 
                 IconButton(
-                    onClick = {
-                        if (isSpeaking) {
-                            tts.stop()
-                            isSpeaking = false
-                        } else {
-                            tts.speak(currentCerita.text, TextToSpeech.QUEUE_FLUSH, null, null)
-                            isSpeaking = true
-                        }
-                    },
+                    onClick = { viewModel.toggleSpeaking() },
                     modifier = Modifier
                         .size(40.dp)
                         .background(Color.White, CircleShape)
                 ) {
                     Icon(
                         painter = painterResource(
-                            id = if (isSpeaking) R.drawable.on_audio else R.drawable.mute_audio
+                            id = if (uiState.isSpeaking) R.drawable.on_audio else R.drawable.mute_audio
                         ),
                         contentDescription = "TTS",
                         tint = Color(0xFF00C2FF),
@@ -230,26 +204,22 @@ fun BacaCeritaScreenUI(navController: NavController, context: Context = LocalCon
             }
         }
 
-        // Page indicator diposisikan fix di bawah layar
+        // Page indicator
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 16.dp) // This will move the PageIndicator to the bottom
+                .padding(bottom = 16.dp)
         ) {
             PageIndicatorBaca(
-                currentPage = currentPage,
-                onPageChange = {
-                    currentPage = it
-                    if (it == ceritaPages.lastIndex) {
-                        showFinishDialog = true
-                    }
-                },
-                pageCount = ceritaPages.size
+                currentPage = uiState.currentPage,
+                onPageChange = { viewModel.setPage(it) },
+                pageCount = uiState.ceritaPages.size
             )
         }
-        // Tombol "Selesai" hanya muncul di halaman terakhir
-        if (currentPage == ceritaPages.lastIndex) {
+
+        // Tombol "Selesai" di halaman terakhir
+        if (uiState.currentPage == uiState.ceritaPages.lastIndex) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -258,7 +228,7 @@ fun BacaCeritaScreenUI(navController: NavController, context: Context = LocalCon
                 contentAlignment = Alignment.Center
             ) {
                 Button(
-                    onClick = { showFinishDialog = true },
+                    onClick = { viewModel.showFinishDialog() },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DE2FC)),
                     shape = RoundedCornerShape(16.dp)
                 ) {
@@ -267,14 +237,14 @@ fun BacaCeritaScreenUI(navController: NavController, context: Context = LocalCon
             }
         }
 
-        // Pop-Up Dialog muncul saat tombol ditekan
-        if (showFinishDialog) {
+        // Dialog "Yeay Cerita Selesai!"
+        if (uiState.showFinishDialog) {
             AlertDialog(
-                onDismissRequest = { showFinishDialog = false },
+                onDismissRequest = { viewModel.hideFinishDialog() },
                 confirmButton = {
                     Button(
                         onClick = {
-                            showFinishDialog = false
+                            viewModel.hideFinishDialog()
                             navController.navigate(Screen.Quiz.route)
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DE2FC)),
@@ -319,5 +289,3 @@ fun BacaCeritaScreenUI(navController: NavController, context: Context = LocalCon
         }
     }
 }
-
-

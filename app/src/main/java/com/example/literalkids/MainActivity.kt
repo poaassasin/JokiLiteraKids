@@ -13,7 +13,6 @@ import com.example.literalkids.ui.BacaCeritaScreenUI
 import com.example.literalkids.ui.ChildProfileUI
 import com.example.literalkids.ui.GenreSearchUI
 import com.example.literalkids.ui.HomeBacaCerita
-import com.example.literalkids.ui.HomepageUI
 import com.example.literalkids.ui.LeaderboardUI
 import com.example.literalkids.ui.LibraryScreen
 import com.example.literalkids.ui.LoginUI
@@ -32,6 +31,7 @@ import com.example.literalkids.ui.QuizScreen3
 import com.example.literalkids.ui.RegisterUI
 import com.example.literalkids.ui.SearchUI
 import com.example.literalkids.ui.SubscriptionUI
+import com.example.literalkids.ui.HomepageUI
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

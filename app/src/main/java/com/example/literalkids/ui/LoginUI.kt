@@ -1,31 +1,25 @@
 package com.example.literalkids.ui
 
-import android.util.Log
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
+import com.example.literalkids.viewmodel.LoginViewModel
 
 @Composable
 fun CurvedHeader() {
@@ -57,15 +51,18 @@ fun CurvedHeader() {
 }
 
 @Composable
-fun LoginUI(navController: NavController) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+fun LoginUI(
+    navController: NavController,
+    viewModel: LoginViewModel = viewModel()
+) {
+    val email by viewModel.email.collectAsState()
+    val password by viewModel.password.collectAsState()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .zIndex(0f) // base layer
+            .zIndex(0f)
     ) {
         CurvedHeader()
 
@@ -73,7 +70,7 @@ fun LoginUI(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 24.dp)
-                .zIndex(1f), // content layer
+                .zIndex(1f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(40.dp))
@@ -91,14 +88,12 @@ fun LoginUI(navController: NavController) {
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-
             Text("Log In", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-
             Spacer(modifier = Modifier.height(40.dp))
 
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = viewModel::onEmailChange,
                 placeholder = { Text("Email") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -110,7 +105,7 @@ fun LoginUI(navController: NavController) {
 
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = viewModel::onPasswordChange,
                 placeholder = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
@@ -132,8 +127,9 @@ fun LoginUI(navController: NavController) {
 
             Button(
                 onClick = {
-                    Log.d("NAV_CHECK", "Login ditekan")
-                    navController.navigate(Screen.OnBoarding1.route)
+                    viewModel.login {
+                        navController.navigate(Screen.OnBoarding1.route)
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -162,7 +158,7 @@ fun LoginUI(navController: NavController) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 OutlinedButton(
-                    onClick = { /* Login dengan Google */ },
+                    onClick = { /* TODO: Google Login */ },
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier
                         .padding(8.dp)
@@ -178,7 +174,7 @@ fun LoginUI(navController: NavController) {
                 }
 
                 OutlinedButton(
-                    onClick = { /* Login dengan Facebook */ },
+                    onClick = { /* TODO: Facebook Login */ },
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier
                         .padding(8.dp)
@@ -213,6 +209,5 @@ fun LoginUI(navController: NavController) {
                 )
             }
         }
-
     }
 }

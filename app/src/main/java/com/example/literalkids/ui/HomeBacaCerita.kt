@@ -204,7 +204,7 @@ fun HomeBacaCerita(navController: NavController) {
         Spacer(modifier = Modifier.height(180.dp))
 
         Button(
-            onClick = { /* TODO: aksi */ },
+            onClick = {  navController.navigate(Screen.BacaCeritaScreen.route) },
             shape = RoundedCornerShape(50),
             modifier = Modifier
                 .fillMaxWidth()

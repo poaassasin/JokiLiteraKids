@@ -1,5 +1,6 @@
 package com.example.literalkids.ui
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,43 +21,19 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
+import com.example.literalkids.viewmodel.SearchViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun SearchUI(navController: NavHostController) {
-    var searchQuery by remember { mutableStateOf("") }
-    val searchHistory = remember { mutableStateListOf<String>() }
-
-
-    val genres = listOf(
-        "Dongeng" to R.drawable.dongeng,
-        "Sains" to R.drawable.sains,
-        "Fabel" to R.drawable.fabel,
-        "Petualangan" to R.drawable.petualangan,
-        "Komedi" to R.drawable.komedi,
-        "Legenda" to R.drawable.legenda,
-        "Mitos" to R.drawable.mitos,
-        "Slice Of Life" to R.drawable.sliceoflife
-    )
-
-    val regions = listOf(
-        "Sumatera" to R.drawable.sumatera,
-        "Sulawesi" to R.drawable.sulawesi,
-        "Jawa" to R.drawable.jawa,
-        "Kalimantan" to R.drawable.kalimantan,
-        "Papua" to R.drawable.papua,
-        "Bali" to R.drawable.bali,
-        "Nusa Tenggara" to R.drawable.nusatenggara
-    )
-    val gradientBackground = Brush.verticalGradient(
-        colors = listOf(Color(0xFF7BDDFB), Color(0xFFD7A5FF))
-    )
+fun SearchUI(navController: NavHostController, viewModel: SearchViewModel = viewModel()) {
+    Log.d("NAV_CHECK", "Masuk ke SearchUI")
+    val uiState by viewModel.uiState.collectAsState()
+    val gradientBackground = Brush.verticalGradient(colors = listOf(Color(0xFF7BDDFB), Color(0xFFD7A5FF)))
 
     Column(
         modifier = Modifier
@@ -79,25 +56,23 @@ fun SearchUI(navController: NavHostController) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.search_button), // ganti sesuai ikonmu
+                    painter = painterResource(id = R.drawable.search_button),
                     contentDescription = "Search",
                     tint = Color(0xFF7BDDFB),
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 BasicTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
+                    value = uiState.searchQuery,
+                    onValueChange = { viewModel.updateSearchQuery(it) },
                     modifier = Modifier.weight(1f),
-                    textStyle = TextStyle(color = Color.Black), // Menentukan warna teks
+                    textStyle = TextStyle(color = Color.Black),
                     decorationBox = { innerTextField ->
-                        Box(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            if (searchQuery.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            if (uiState.searchQuery.isEmpty()) {
                                 Text(
                                     text = "Cari cerita yang kamu mau...",
-                                    color = Color.Gray, 
+                                    color = Color.Gray,
                                     style = TextStyle(fontSize = 16.sp)
                                 )
                             }
@@ -110,37 +85,71 @@ fun SearchUI(navController: NavHostController) {
                     text = "Batalkan",
                     color = Color.Gray,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable{ navController.popBackStack()}
-
+                    modifier = Modifier.clickable { navController.popBackStack() }
                 )
             }
         }
 
-        Text("\nPencarian Terakhir", fontWeight = FontWeight.Bold)
-        LazyColumn(modifier = Modifier.height(100.dp)) {
-            items(searchHistory) {
-                Text("🔍 $it")
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
-        }
+        } else if (uiState.error != null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Error: ${uiState.error}", color = Color.Red)
+            }
+        } else {
+            // Pencarian Terakhir
+            Text(
+                text = "\nPencarian Terakhir",
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            LazyColumn(modifier = Modifier.height(100.dp)) {
+                items(uiState.searchHistory) { query ->
+                    Text(
+                        text = "🔍 $query",
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                }
+            }
 
-        Text("\nGenre Favorit", fontWeight = FontWeight.Bold)
-        Column {
-            for (row in genres.chunked(4)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    row.forEach { (genre, icon) ->
-                        GenreItem(genre = genre, icon = icon) {
-                            navController.navigate(Screen.GenreSelector.createRoute(genre))
+            // Genre Favorit
+            Text(
+                text = "\nGenre Favorit",
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            Column {
+                for (row in uiState.genres.chunked(4)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        row.forEach { genre ->
+                            GenreItem(
+                                genre = genre.name,
+                                icon = genre.icon,
+                                onClick = { viewModel.navigateToGenre(navController, genre.name) }
+                            )
                         }
                     }
                 }
             }
-        }
 
-        Text("\nCerita Nusantara", fontWeight = FontWeight.Bold)
-        LazyColumn(modifier = Modifier.fillMaxWidth()) {
-            items(regions) { (region, image) ->
-                RegionItem(region = region, image = image) {
-                    navController.navigate("region/$region")
+            // Cerita Nusantara
+            Text(
+                text = "\nCerita Nusantara",
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                items(uiState.regions) { region ->
+                    RegionItem(
+                        region = region.name,
+                        image = region.icon,
+                        onClick = { viewModel.navigateToRegion(navController, region.name) }
+                    )
                 }
             }
         }
@@ -160,13 +169,15 @@ fun GenreItem(genre: String, icon: Int, onClick: () -> Unit) {
                 .size(70.dp)
                 .clip(CircleShape)
                 .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(Color(0xFF5AD8FF), Color(0xFFDE99FF))
-                    )
+                    brush = Brush.linearGradient(colors = listOf(Color(0xFF5AD8FF), Color(0xFFDE99FF)))
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Image(painter = painterResource(id = icon), contentDescription = genre, modifier = Modifier.size(40.dp))
+            Image(
+                painter = painterResource(id = icon),
+                contentDescription = genre,
+                modifier = Modifier.size(40.dp)
+            )
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(text = genre, fontSize = 12.sp, fontWeight = FontWeight.Medium)
@@ -179,25 +190,21 @@ fun RegionItem(region: String, image: Int, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)
-            .padding(vertical = 8.dp)
+            .padding(vertical = 8.dp, horizontal = 16.dp)
             .clip(RoundedCornerShape(20.dp))
             .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(Color(0xFFDE99FF), Color(0xFF5AD8FF))
-                )
+                brush = Brush.linearGradient(colors = listOf(Color(0xFFDE99FF), Color(0xFF5AD8FF)))
             )
             .clickable { onClick() }
     ) {
-        Row(modifier = Modifier.fillMaxHeight()
-
-        ) {
+        Row(modifier = Modifier.fillMaxHeight()) {
             Image(
                 painter = painterResource(id = image),
                 contentDescription = region,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(120.dp) // Lebar gambar, bisa disesuaikan
+                    .width(120.dp)
                     .clip(RoundedCornerShape(topStart = 20.dp, bottomStart = 20.dp))
             )
             Spacer(modifier = Modifier.width(16.dp))
@@ -216,13 +223,4 @@ fun RegionItem(region: String, image: Int, onClick: () -> Unit) {
             }
         }
     }
-}
-
-
-
-@Preview(showBackground = true)
-@Composable
-fun SearchUIPreview() {
-    val dummyNavController = rememberNavController()
-    SearchUI(navController = dummyNavController)
 }

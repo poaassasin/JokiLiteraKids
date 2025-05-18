@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,17 +17,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
+import com.example.literalkids.viewmodel.RegisterViewModel
 
 @Composable
-fun RegisterUI(navController: NavController) {
-    var email by remember { mutableStateOf("") }
-    val isEmailValid = email.contains("@") && email.contains(".")
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-
+fun RegisterUI(navController: NavController, viewModel: RegisterViewModel = viewModel()) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -62,11 +59,11 @@ fun RegisterUI(navController: NavController) {
             Spacer(modifier = Modifier.height(40.dp))
 
             OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
+                value = viewModel.email,
+                onValueChange = { viewModel.email = it },
                 placeholder = { Text("Email") },
                 trailingIcon = {
-                    if (isEmailValid) {
+                    if (viewModel.isEmailValid) {
                         Image(
                             painter = painterResource(id = R.drawable.tombol_check),
                             contentDescription = "Valid",
@@ -83,8 +80,8 @@ fun RegisterUI(navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
+                value = viewModel.password,
+                onValueChange = { viewModel.password = it },
                 placeholder = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
@@ -96,8 +93,8 @@ fun RegisterUI(navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
+                value = viewModel.confirmPassword,
+                onValueChange = { viewModel.confirmPassword = it },
                 placeholder = { Text("Confirm Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
