@@ -15,9 +15,7 @@ sealed class Screen(val route: String) {
         fun createRoute(genre: String) = "genre/$genre"
     }
     object Search : Screen ("search")
-    object Quiz : Screen ("book_quiz1")
-    object Quiz2 : Screen ("book_quiz2")
-    object Quiz3 : Screen ("book_quiz3")
+    object Quiz : Screen ("book_quiz")
     object HomeBacaCerita : Screen ("home_baca")
     object BacaCeritaScreen : Screen ("baca_cerita_screen")
     object QuizResult : Screen ("quiz_result")

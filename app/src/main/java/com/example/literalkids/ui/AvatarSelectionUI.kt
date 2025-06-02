@@ -1,7 +1,5 @@
 package com.example.literalkids.ui
 
-import android.os.Handler
-import android.os.Looper
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,7 +15,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,112 +32,32 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.literalkids.R
-
-data class AvatarOption(
-    val id: Int,
-    val name: String,
-    val price: Int,
-    val imageUrl: Int
-)
+import com.example.literalkids.viewmodel.AvatarOption
+import com.example.literalkids.viewmodel.ProfileViewModel
 
 @Composable
 fun AvatarSelectionUI(
     navController: NavController,
 ) {
-
     val context = LocalContext.current
-
-    var uiState by remember {
-        mutableStateOf(
-            UserData(
-                id = "user11",
-                fullName = "Levi Annora",
-                username = "leviannora",
-                level = 7,
-                currentXp = 90,
-                maxXp = 100,
-                age = 5,
-                gender = "perempuan",
-                schoolLevel = "TK",
-                birthDate = "7/4/2025",
-                avatarUrl = R.drawable.default_avatar,
-                coins = 450,
-                type = "child",
-                ownedAvatars = listOf(
-                    R.drawable.default_avatar
-                ),
-                isLoading = false
-            )
-        )
-    }
-
-    val avatarOptions = listOf(
-        AvatarOption(1, "Penyihir", 200, R.drawable.default_avatar),
-        AvatarOption(2, "Dinosaurus", 200, R.drawable.avatar_dino),
-        AvatarOption(3, "Kuda Poni", 200, R.drawable.avatar_poni),
-        AvatarOption(4, "Bunga", 200, R.drawable.avatar_bunga),
-        AvatarOption(5, "Katak", 200, R.drawable.avatar_katak),
-        AvatarOption(6, "Ksatria", 250, R.drawable.avatar_ksatria)
-    )
-
-    var selectedAvatar by remember(uiState.avatarUrl) { mutableIntStateOf(uiState.avatarUrl) }
-    var showOnlyOwned by remember { mutableStateOf(false) }
-    var showPurchaseDialog by remember { mutableStateOf(false) }
-    var selectedAvatarForPurchase by remember { mutableStateOf<AvatarOption?>(null) }
-    var purchaseSuccess by remember { mutableStateOf(false) }
-    var purchaseError by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
+    val profileViewModel: ProfileViewModel = viewModel()
+    val uiState by profileViewModel.uiState.collectAsState()
 
     val findAvatarByUrl: (Int) -> AvatarOption? = { url ->
-        avatarOptions.find { it.imageUrl == url }
+        uiState.avatarOptions.find { it.imageUrl == url }
     }
 
-    val currentActionAvatar = selectedAvatarForPurchase ?:
-    findAvatarByUrl(uiState.avatarUrl) ?:
-    avatarOptions.first()
-
-    fun updateAvatar(imageUrl: Int) {
-        uiState = uiState.copy(avatarUrl = imageUrl)
-        selectedAvatar = imageUrl
-        Toast.makeText(context, "Avatar berhasil diperbarui", Toast.LENGTH_SHORT).show()
-    }
-
-    fun purchaseAvatar(imageUrl: Int, price: Int) {
-        isLoading = true
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            isLoading = false
-
-            if (uiState.coins >= price) {
-                // Update state with new owned avatar and reduced coins
-                val newOwnedAvatars = uiState.ownedAvatars.toMutableList()
-                if (!newOwnedAvatars.contains(imageUrl)) {
-                    newOwnedAvatars.add(imageUrl)
-                }
-
-                uiState = uiState.copy(
-                    ownedAvatars = newOwnedAvatars,
-                    coins = uiState.coins - price
-                )
-
-                purchaseSuccess = true
-            } else {
-                purchaseError = "Koin tidak cukup untuk membeli avatar ini."
-            }
-        }, 1000)
-    }
-
-    fun resetPurchaseStatus() {
-        purchaseSuccess = false
-        purchaseError = null
-    }
+    val currentActionAvatar = uiState.selectedAvatarForPurchase ?:
+    findAvatarByUrl(uiState.childData.avatarUrl) ?:
+    uiState.avatarOptions.first()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background) // Gunakan background dari tema
     ) {
         Box(
             modifier = Modifier
@@ -146,8 +66,8 @@ fun AvatarSelectionUI(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFF5AD8FF),
-                            Color(0xFFDE99FF)
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.secondary
                         )
                     )
                 )
@@ -161,13 +81,13 @@ fun AvatarSelectionUI(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Kembali",
-                    tint = Color.White
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
 
             Text(
                 text = "Kembali",
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier
@@ -183,13 +103,13 @@ fun AvatarSelectionUI(
             contentAlignment = Alignment.Center
         ) {
             Image(
-                painter = painterResource(id = selectedAvatar),
+                painter = painterResource(id = uiState.selectedAvatar),
                 contentDescription = "Selected Avatar",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(120.dp)
                     .clip(CircleShape)
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.surface)
             )
         }
 
@@ -205,8 +125,8 @@ fun AvatarSelectionUI(
                     .background(
                         brush = Brush.horizontalGradient(
                             colors = listOf(
-                                Color(0xFF5AD8FF),
-                                Color(0xFFDE99FF)
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.secondary
                             )
                         )
                     )
@@ -222,8 +142,8 @@ fun AvatarSelectionUI(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "${uiState.coins} koin",
-                        color = Color.White,
+                        text = "${uiState.childData.coins} koin",
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -234,14 +154,14 @@ fun AvatarSelectionUI(
             text = "Pilihan Karakter",
             fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
-            color = Color(0xFF1D7193),
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 8.dp)
         )
 
-        val displayedAvatars = if (showOnlyOwned) {
-            avatarOptions.filter { avatar -> avatar.imageUrl in uiState.ownedAvatars }
+        val displayedAvatars = if (uiState.showOnlyOwned) {
+            uiState.avatarOptions.filter { avatar -> avatar.imageUrl in uiState.childData.ownedAvatars }
         } else {
-            avatarOptions
+            uiState.avatarOptions
         }
 
         LazyVerticalGrid(
@@ -252,27 +172,26 @@ fun AvatarSelectionUI(
             modifier = Modifier.fillMaxWidth()
         ) {
             items(displayedAvatars) { avatar ->
-                val isSelected = selectedAvatar == avatar.imageUrl
-
-                val isOwned = avatar.imageUrl in uiState.ownedAvatars
+                val isSelected = uiState.selectedAvatar == avatar.imageUrl
+                val isOwned = avatar.imageUrl in uiState.childData.ownedAvatars
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color.White)
+                        .background(MaterialTheme.colorScheme.surface)
                         .border(
                             width = if (isSelected) 2.dp else 1.dp,
-                            color = if (isSelected) Color(0xFF5DCCF8) else Color.LightGray,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray,
                             shape = RoundedCornerShape(16.dp)
                         )
                         .clickable {
                             if (isOwned) {
-                                selectedAvatar = avatar.imageUrl
-                                updateAvatar(avatar.imageUrl)
+                                profileViewModel.updateAvatar(avatar.imageUrl)
+                                Toast.makeText(context, "Avatar berhasil diperbarui", Toast.LENGTH_SHORT).show()
                             } else {
-                                selectedAvatarForPurchase = avatar
-                                showPurchaseDialog = true
+                                profileViewModel.setSelectedAvatarForPurchase(avatar)
+                                profileViewModel.setShowPurchaseDialog(true)
                             }
                         }
                         .padding(8.dp)
@@ -297,14 +216,14 @@ fun AvatarSelectionUI(
                                 modifier = Modifier
                                     .size(24.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFF5DCCF8))
+                                    .background(MaterialTheme.colorScheme.primary)
                                     .padding(4.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = "Selected",
-                                    tint = Color.White,
+                                    tint = MaterialTheme.colorScheme.onPrimary,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -320,7 +239,7 @@ fun AvatarSelectionUI(
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = "Owned",
-                                    tint = Color.White,
+                                    tint = MaterialTheme.colorScheme.onPrimary,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -333,7 +252,7 @@ fun AvatarSelectionUI(
                         text = avatar.name,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF1D7193),
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                     )
 
@@ -360,7 +279,7 @@ fun AvatarSelectionUI(
                                 Text(
                                     text = "${avatar.price} Koin",
                                     fontSize = 12.sp,
-                                    color = Color(0xFF1D7193)
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         } else {
@@ -372,41 +291,40 @@ fun AvatarSelectionUI(
         }
     }
 
-    if (showPurchaseDialog && selectedAvatarForPurchase != null) {
+    if (uiState.showPurchaseDialog && uiState.selectedAvatarForPurchase != null) {
         PurchaseDialog(
-            avatarOption = selectedAvatarForPurchase!!,
+            avatarOption = uiState.selectedAvatarForPurchase!!,
             onDismiss = {
-                showPurchaseDialog = false
+                profileViewModel.setShowPurchaseDialog(false)
             },
             onConfirmPurchase = {
-                purchaseAvatar(
-                    selectedAvatarForPurchase!!.imageUrl,
-                    selectedAvatarForPurchase!!.price
+                profileViewModel.purchaseAvatar(
+                    uiState.selectedAvatarForPurchase!!.imageUrl,
+                    uiState.selectedAvatarForPurchase!!.price
                 )
-
-                showPurchaseDialog = false
+                profileViewModel.setShowPurchaseDialog(false)
             }
         )
     }
 
-    if (purchaseSuccess) {
+    if (uiState.purchaseSuccess) {
         SuccessDialog(
             showDialog = true,
             avatarOption = currentActionAvatar,
             message = "Avatar berhasil dibeli!",
             onDismiss = {
-                resetPurchaseStatus()
-                selectedAvatar = currentActionAvatar.imageUrl
+                profileViewModel.resetPurchaseStatus()
+                profileViewModel.updateAvatar(currentActionAvatar.imageUrl)
             }
         )
     }
 
-    if (purchaseError != null) {
+    if (uiState.purchaseError != null) {
         ErrorDialog(
             showDialog = true,
             avatarOption = currentActionAvatar,
-            message = purchaseError ?: "Gagal membeli avatar. Silakan coba lagi.",
-            onDismiss = { resetPurchaseStatus() }
+            message = uiState.purchaseError ?: "Gagal membeli avatar. Silakan coba lagi.",
+            onDismiss = { profileViewModel.resetPurchaseStatus() }
         )
     }
 
@@ -418,7 +336,7 @@ fun AvatarSelectionUI(
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(
-                color = Color(0xFF5DCCF8)
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }
@@ -455,7 +373,7 @@ fun ErrorDialog(
                         .padding(top = 70.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color.White
+                        containerColor = MaterialTheme.colorScheme.surface
                     ),
                     elevation = CardDefaults.cardElevation(
                         defaultElevation = 8.dp
@@ -469,7 +387,7 @@ fun ErrorDialog(
                     ) {
                         Text(
                             text = "Gagal",
-                            color = Color(0xFFE53935),
+                            color = MaterialTheme.colorScheme.error,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
@@ -482,7 +400,7 @@ fun ErrorDialog(
                                 .width(150.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = Color.White
+                                containerColor = MaterialTheme.colorScheme.surface
                             ),
                         ) {
                             Column(
@@ -507,7 +425,7 @@ fun ErrorDialog(
                                     text = avatarOption.name,
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF1D7193),
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.padding(horizontal = 8.dp)
                                 )
@@ -525,7 +443,7 @@ fun ErrorDialog(
                                     Text(
                                         text = "${avatarOption.price} Koin",
                                         fontSize = 16.sp,
-                                        color = Color(0xFF1D7193)
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
                             }
@@ -533,7 +451,7 @@ fun ErrorDialog(
 
                         Text(
                             text = message,
-                            color = Color(0xFF5A5A5A),
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 16.sp,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
@@ -547,8 +465,8 @@ fun ErrorDialog(
                                 .padding(horizontal = 32.dp),
                             shape = RoundedCornerShape(24.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFE53935),
-                                contentColor = Color.White
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError
                             )
                         ) {
                             Text(
@@ -593,7 +511,7 @@ fun PurchaseDialog(
                     .padding(top = 70.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.surface
                 ),
                 elevation = CardDefaults.cardElevation(
                     defaultElevation = 8.dp
@@ -607,7 +525,7 @@ fun PurchaseDialog(
                 ) {
                     Text(
                         text = "Beli Item",
-                        color = Color(0xFF1D7193),
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
@@ -620,7 +538,7 @@ fun PurchaseDialog(
                             .width(150.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color.White
+                            containerColor = MaterialTheme.colorScheme.surface
                         ),
                     ) {
                         Column(
@@ -643,7 +561,7 @@ fun PurchaseDialog(
                                 text = avatarOption.name,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = Color(0xFF1D7193),
+                                color = MaterialTheme.colorScheme.onSurface,
                                 textAlign = TextAlign.Center
                             )
 
@@ -662,7 +580,7 @@ fun PurchaseDialog(
                                 Text(
                                     text = "${avatarOption.price} Koin",
                                     fontSize = 16.sp,
-                                    color = Color(0xFF1D7193)
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
@@ -681,8 +599,8 @@ fun PurchaseDialog(
                                 .height(48.dp),
                             shape = RoundedCornerShape(24.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFE0F7FF),
-                                contentColor = Color(0xFF5DCCF8)
+                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                contentColor = MaterialTheme.colorScheme.primary
                             )
                         ) {
                             Text(
@@ -699,8 +617,8 @@ fun PurchaseDialog(
                                 .height(48.dp),
                             shape = RoundedCornerShape(24.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF5DCCF8),
-                                contentColor = Color.White
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             )
                         ) {
                             Text(
@@ -747,7 +665,7 @@ fun SuccessDialog(
                         .padding(top = 70.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color.White
+                        containerColor = MaterialTheme.colorScheme.surface
                     ),
                     elevation = CardDefaults.cardElevation(
                         defaultElevation = 8.dp
@@ -761,7 +679,7 @@ fun SuccessDialog(
                     ) {
                         Text(
                             text = "Berhasil!",
-                            color = Color(0xFF1D7193),
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
@@ -774,7 +692,7 @@ fun SuccessDialog(
                                 .width(150.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = Color.White
+                                containerColor = MaterialTheme.colorScheme.surface
                             ),
                         ) {
                             Column(
@@ -799,7 +717,7 @@ fun SuccessDialog(
                                     text = avatarOption.name,
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF1D7193),
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.padding(horizontal = 8.dp)
                                 )
@@ -817,7 +735,7 @@ fun SuccessDialog(
                                     Text(
                                         text = "${avatarOption.price} Koin",
                                         fontSize = 16.sp,
-                                        color = Color(0xFF1D7193)
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
                             }
@@ -825,7 +743,7 @@ fun SuccessDialog(
 
                         Text(
                             text = message,
-                            color = Color(0xFF5A5A5A),
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 16.sp,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
@@ -839,8 +757,8 @@ fun SuccessDialog(
                                 .padding(horizontal = 32.dp),
                             shape = RoundedCornerShape(24.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF5DCCF8),
-                                contentColor = Color.White
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             )
                         ) {
                             Text(

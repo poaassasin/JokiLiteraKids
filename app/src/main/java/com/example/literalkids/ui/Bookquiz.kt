@@ -7,41 +7,55 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.R
+import com.example.literalkids.viewmodel.QuizViewModel
+import android.util.Log
 import com.example.literalkids.navigation.Screen
 
 @Composable
-fun QuizScreen(navController: NavController) {
-    var selectedAnswer by remember { mutableStateOf<String?>(null) }
-    var showAnswer by remember { mutableStateOf(false) }
+fun QuizScreen(navController: NavController, viewModel: QuizViewModel = viewModel()) {
+    val uiState by viewModel.uiState.collectAsState()
+    Log.d("QuizScreen", "Rendering - Total Score: ${uiState.totalScore}")
+    if (uiState.questions.isEmpty()) {
+        Text(
+            text = "No questions loaded!",
+            color = Color.Red,
+            modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.Center)
+        )
+        return
+    }
+    val currentQuestion = uiState.questions[uiState.currentQuestionIndex]
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(id = R.drawable.bg_quiz1),
+            painter = painterResource(id = currentQuestion.backgroundRes),
             contentDescription = "background",
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.FillBounds
         )
 
         Box(
             modifier = Modifier
-                .width(412.dp)
+                .fillMaxWidth()
                 .height(110.dp)
                 .align(Alignment.TopCenter)
                 .padding(top = 1.dp)
@@ -68,14 +82,14 @@ fun QuizScreen(navController: NavController) {
                     .height(20.dp)
                     .align(Alignment.CenterVertically)
                     .clickable {
-                        navController.popBackStack()
+                        navController.navigate(Screen.HomeBacaCerita.route)
                     }
             )
 
             Spacer(modifier = Modifier.width(12.dp))
 
             Text(
-                text = "Kancil Mencuri Ketimun",
+                text = uiState.storyTitle,
                 fontSize = 24.sp,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
@@ -86,7 +100,7 @@ fun QuizScreen(navController: NavController) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 126.dp, end = 16.dp)
+                .padding(top = 126.dp, start = 16.dp, end = 16.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -117,7 +131,7 @@ fun QuizScreen(navController: NavController) {
                 }
 
                 Text(
-                    text = "Soal 1",
+                    text = currentQuestion.questionLabel,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
@@ -126,7 +140,67 @@ fun QuizScreen(navController: NavController) {
                 )
             }
 
-            StarRating(2)
+            if (currentQuestion.hasSound) {
+                Image(
+                    painter = painterResource(id = R.drawable.sound_quiz1),
+                    contentDescription = "sound1",
+                    modifier = Modifier
+                        .size(40.dp)
+                        .align(Alignment.TopEnd)
+                        .clickable { viewModel.onSoundClicked() }
+                )
+            }
+
+            // Page indicator (posisi di tengah, ukuran kecil)
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.align(Alignment.Center)
+            ) {
+                if (uiState.currentQuestionIndex > 0) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.tombol_back),
+                        contentDescription = "Previous",
+                        tint = Color(0xFF5AD8FF),
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable { viewModel.goToPreviousQuestion() }
+                    )
+                } else {
+                    Spacer(modifier = Modifier.width(20.dp))
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    repeat(uiState.questions.size) { index ->
+                        Image(
+                            painter = painterResource(
+                                id = if (index <= uiState.currentQuestionIndex) R.drawable.star_filled else R.drawable.star_empty
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(30.dp)
+                                .padding(horizontal = 2.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                if (uiState.currentQuestionIndex < uiState.questions.size - 1) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_next),
+                        contentDescription = "Next",
+                        tint = Color(0xFF5AD8FF),
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable { viewModel.goToNextQuestion() }
+                    )
+                } else {
+                    Spacer(modifier = Modifier.width(20.dp))
+                }
+            }
         }
 
         Column(
@@ -151,19 +225,12 @@ fun QuizScreen(navController: NavController) {
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Apa yang membuat Pak Tani marah?",
+                        text = currentQuestion.questionText,
                         fontSize = 22.sp,
                         color = Color(0xFF0A5470),
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 1.dp, bottom = 25.dp)
-                    )
-
-                    val answers = listOf(
-                        "Kancil Minta Ketimun",
-                        "Kancil Mencuri Ketimun",
-                        "Kancil Tidur Di Kebun",
-                        "Kancil Membantu Di Kebun"
                     )
 
                     LazyVerticalGrid(
@@ -175,14 +242,29 @@ fun QuizScreen(navController: NavController) {
                         verticalArrangement = Arrangement.spacedBy(1.dp),
                         userScrollEnabled = false
                     ) {
-                        items(answers) { answer ->
-                            val isSelected = selectedAnswer == answer
-                            val bgColor = when {
-                                answer.contains("Minta") -> Color(0xFF8BC1C3)
-                                answer.contains("Mencuri") -> Color(0xFFEDF0FF)
-                                answer.contains("Tidur") -> Color(0xFFF5D9FF)
-                                answer.contains("Membantu") -> Color(0xFFFFF1B4)
-                                else -> Color.LightGray
+                        itemsIndexed(currentQuestion.answers) { index, answer ->
+                            val isSelected = uiState.selectedAnswer == answer
+                            val background = if (isSelected) {
+                                Brush.horizontalGradient(colors = listOf(Color.Gray, Color.Gray))
+                            } else {
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        when (index) {
+                                            0 -> Color(0xFFCDF3F4)
+                                            1 -> Color(0xFFEDF0FF)
+                                            2 -> Color(0xFFF5D9FF)
+                                            3 -> Color(0xFFFFF1B4)
+                                            else -> Color.LightGray
+                                        },
+                                        when (index) {
+                                            0 -> Color(0xFFCDF3F4)
+                                            1 -> Color(0xFFEDF0FF)
+                                            2 -> Color(0xFFF5D9FF)
+                                            3 -> Color(0xFFFFF1B4)
+                                            else -> Color.LightGray
+                                        }
+                                    )
+                                )
                             }
 
                             Box(
@@ -191,14 +273,10 @@ fun QuizScreen(navController: NavController) {
                                     .width(160.dp)
                                     .height(50.dp)
                                     .background(
-                                        color = if (isSelected) Color.Gray else bgColor,
+                                        brush = background,
                                         shape = RoundedCornerShape(20.dp)
                                     )
-                                    .clickable {
-                                        println("Jawaban dipilih: $answer")
-                                        selectedAnswer = answer
-                                    }
-                                    .padding(horizontal = 4.dp, vertical = 4.dp),
+                                    .clickable { viewModel.selectAnswer(answer) },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -209,8 +287,8 @@ fun QuizScreen(navController: NavController) {
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 2,
                                     modifier = Modifier
-                                        .width(140.dp)
-                                        .height(42.dp)
+                                        .fillMaxSize()
+                                        .wrapContentHeight(align = Alignment.CenterVertically)
                                 )
                             }
                         }
@@ -219,11 +297,8 @@ fun QuizScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Button(
-                        onClick = {
-                            println("Tombol cek jawaban ditekan")
-                            showAnswer = true
-                        },
-                        enabled = selectedAnswer != null,
+                        onClick = { viewModel.checkAnswer() },
+                        enabled = uiState.selectedAnswer != null,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF5AD8FF),
                             disabledContainerColor = Color.LightGray
@@ -240,19 +315,11 @@ fun QuizScreen(navController: NavController) {
 
                     Spacer(modifier = Modifier.height(26.dp))
 
-                    if (showAnswer && selectedAnswer != null) {
-                        val correctAnswer = "Kancil Mencuri Ketimun"
-                        val isCorrect = selectedAnswer == correctAnswer
-                        val answerText = if (isCorrect) {
-                            "Jawaban: Benar \nPak Tani Menangkap Kancil Dengan Perangkap."
-                        } else {
-                            "Jawaban: Salah"
-                        }
-
+                    if (uiState.showAnswer && uiState.selectedAnswer != null) {
                         Text(
-                            text = answerText,
+                            text = uiState.answerFeedback,
                             fontSize = 12.sp,
-                            color = if (isCorrect) Color(0xFF4CAF50) else Color.Red,
+                            color = if (uiState.isAnswerCorrect) Color(0xFF4CAF50) else Color.Red,
                             fontWeight = FontWeight.SemiBold,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(bottom = 16.dp)
@@ -262,125 +329,87 @@ fun QuizScreen(navController: NavController) {
             }
         }
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(
-                    color = Color.White,
-                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
-                )
-                .padding(top = 24.dp, bottom = 40.dp, start = 24.dp, end = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Jawaban: Benar",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0A5470),
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Icon(
-                    painter = painterResource(id = R.drawable.ceklis_quiz1),
-                    contentDescription = "Benar",
-                    tint = Color(0xFF4AA363),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-            Text(
-                text = "Pak Tani Menangkap Kancil Dengan Cara Menggunakan Perangkap Jebakan.",
-                fontSize = 14.sp,
-                color = Color(0xFF0A5470)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.star_badge),
-                        contentDescription = "XP",
-                        tint = Color.Unspecified,
-                        modifier = Modifier.size(40.dp)
+        if (uiState.showAnswer && uiState.selectedAnswer != null) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .background(
+                        color = Color.White,
+                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "+20 XP",
-                        fontSize = 14.sp,
-                        color = Color(0xFF0A5470),
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                Button(
-                    onClick = {
-                        println("Tombol lanjut diklik")
-                        navController.navigate(Screen.Quiz2.route)
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5AD8FF)),
-                    shape = RoundedCornerShape(50),
-                    modifier = Modifier
-                        .height(45.dp)
-                        .width(100.dp)
+                    .padding(top = 24.dp, bottom = 40.dp, start = 24.dp, end = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Lanjut",
-                        fontSize = 16.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
+                        text = if (uiState.isAnswerCorrect) "Jawaban: Benar" else "Jawaban: Salah",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0A5470),
+                        modifier = Modifier.padding(end = 8.dp)
                     )
+                    Icon(
+                        painter = painterResource(id = if (uiState.isAnswerCorrect) R.drawable.ceklis_quiz1 else R.drawable.incorrect_quiz3),
+                        contentDescription = if (uiState.isAnswerCorrect) "Benar" else "Salah",
+                        tint = if (uiState.isAnswerCorrect) Color(0xFF4AA363) else Color(0xFFD12828),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Text(
+                    text = currentQuestion.correctAnswerExplanation,
+                    fontSize = 14.sp,
+                    color = Color(0xFF0A5470)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (uiState.isAnswerCorrect) { // Hanya muncul jika jawaban benar
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.star_badge),
+                                contentDescription = "XP",
+                                tint = Color.Unspecified,
+                                modifier = Modifier.size(40.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "+${uiState.totalScore} XP",
+                                fontSize = 14.sp,
+                                color = Color(0xFF0A5470),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.width(0.dp))
+                    }
+
+                    Button(
+                        onClick = {
+                            Log.d("QuizScreen", "Before Continue - Total Score: ${uiState.totalScore}, Total Coins: ${uiState.totalCoins}")
+                            viewModel.onContinueClicked(navController)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5AD8FF)),
+                        shape = RoundedCornerShape(50),
+                        modifier = Modifier
+                            .height(45.dp)
+                            .width(100.dp)
+                    ) {
+                        Text(
+                            text = if (uiState.currentQuestionIndex < uiState.questions.size - 1) "Lanjut" else "Selesai",
+                            fontSize = 16.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun StarRating(score: Int, max: Int = 3) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(40.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        (1..max).forEach { index ->
-            val drawable = if (index <= score) R.drawable.star_filled else R.drawable.star_empty
-            Image(
-                painter = painterResource(id = drawable),
-                contentDescription = "star$index",
-                modifier = Modifier.size(20.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Image(
-            painter = painterResource(id = R.drawable.next),
-            contentDescription = "next1",
-            modifier = Modifier
-                .size(20.dp)
-                .clickable {
-                    println("Icon next diklik")
-                    // Tambahkan aksi navigasi atau logika lainnya
-                }
-        )
-    }
-}
-
-
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun QuizScreenPreview() {
-    MaterialTheme {
-        val navController = rememberNavController()
-        QuizScreen(navController = navController)
     }
 }

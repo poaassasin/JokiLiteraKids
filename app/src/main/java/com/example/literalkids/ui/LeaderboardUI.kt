@@ -57,44 +57,8 @@ import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
-import kotlinx.coroutines.delay
-
-data class LeaderboardUser(
-    val id: String,
-    val fullName: String,
-    val username: String,
-    val level: Int,
-    val avatarUrl: Int,
-    val isCurrentUser: Boolean = false
-)
-
-sealed class LeaderboardState {
-    object Loading : LeaderboardState()
-    data class Success(val users: List<LeaderboardUser>) : LeaderboardState()
-    data class Error(val message: String) : LeaderboardState()
-}
-
-suspend fun getLeaderboardUsers(): List<LeaderboardUser> {
-
-    delay(1000)
-
-    val mockUsers = listOf(
-        LeaderboardUser("user1", "Ayu Dewi", "ayudewi", 99, R.drawable.avatar_bunga), // parent
-        LeaderboardUser("user2", "Fahri Hidayat", "fahridayat", 90, R.drawable.avatar_dino), // parent
-        LeaderboardUser("user3", "Lala Rumi", "lalamimi", 44, R.drawable.avatar_ksatria), // child
-        LeaderboardUser("user4", "Salsabilla Putri", "salsabil", 41, R.drawable.avatar_poni),
-        LeaderboardUser("user5", "Ahmad Farhan", "ahmadfar", 19, R.drawable.parent_avatar), // parent
-        LeaderboardUser("user6", "Rafa Elvano", "rafaelvano", 37, R.drawable.avatar_bunga),
-        LeaderboardUser("user7", "Anisa Lestari", "anisalestari", 21, R.drawable.avatar_ksatria), // parent
-        LeaderboardUser("user8", "Budi Santoso", "budisantoso", 10, R.drawable.parent_avatar), // parent
-        LeaderboardUser("user9", "Kalea Syakira", "inisyakira", 29, R.drawable.avatar_katak),
-        LeaderboardUser("user10", "Fayra Alesha", "feyysha", 28, R.drawable.avatar_dino),
-        LeaderboardUser("user11", "Levi Annora", "leviannora", 7, R.drawable.default_avatar, true),
-        LeaderboardUser("user12", "Adinda Febyola", "febydinda", 38, R.drawable.parent_avatar)
-    )
-
-    return mockUsers.sortedByDescending { it.level }
-}
+import com.example.literalkids.viewmodel.LeaderboardState
+import com.example.literalkids.viewmodel.LeaderboardUser
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,7 +71,7 @@ fun LeaderboardUI(
 
     LaunchedEffect(key1 = true) {
         try {
-            val users = getLeaderboardUsers()
+            val users = com.example.literalkids.viewmodel.getLeaderboardUsers()
             leaderboardState = LeaderboardState.Success(users)
         } catch (e: Exception) {
             leaderboardState = LeaderboardState.Error("Error loading leaderboard: ${e.message}")
@@ -138,8 +102,7 @@ fun LeaderboardUI(
                             contentDescription = "Back",
                             tint = Color.White,
                             modifier = modifier
-                                .clickable { navController.navigate(Screen.Homepage.route)
-                            }
+                                .clickable { navController.navigate(Screen.Homepage.route) }
                         )
                     }
                 },

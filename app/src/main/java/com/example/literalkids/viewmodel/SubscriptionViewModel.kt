@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 // Model
 data class SubscriptionPlan(
@@ -15,6 +18,7 @@ data class SubscriptionPlan(
     val subscriptionPeriod: String? = null
 )
 
+// UI State
 data class SubscriptionUiState(
     val plans: List<SubscriptionPlan> = emptyList(),
     val activePlan: SubscriptionPlan? = null,
@@ -27,28 +31,41 @@ data class SubscriptionUiState(
 // Repository
 class SubscriptionRepository {
     fun getSubscriptionPlans(): List<SubscriptionPlan> {
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+        val startDate = dateFormat.format(calendar.time)
+
         return listOf(
             SubscriptionPlan(
                 id = 1,
                 title = "Paket Ceria",
                 price = "Rp25.000 Selama 1 Bulan",
-                subscriptionPeriod = "10/04/2025 - 10/05/2025"
+                subscriptionPeriod = calculatePeriod(1, startDate) // 1 bulan
             ),
             SubscriptionPlan(
                 id = 2,
                 title = "Paket Hebat",
                 price = "Rp65.000 Selama 3 Bulan",
                 savings = "Hemat Hingga Rp10.000",
-                subscriptionPeriod = "10/04/2025 - 10/07/2025"
+                subscriptionPeriod = calculatePeriod(3, startDate) // 3 bulan
             ),
             SubscriptionPlan(
                 id = 3,
                 title = "Paket Juara",
                 price = "Rp180.000 Selama 12 Bulan",
                 savings = "Setara 4 Bulan Gratis",
-                subscriptionPeriod = "10/04/2025 - 10/04/2026"
+                subscriptionPeriod = calculatePeriod(12, startDate) // 12 bulan
             )
         )
+    }
+
+    private fun calculatePeriod(months: Int, startDate: String): String {
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+        calendar.time = dateFormat.parse(startDate)!!
+        calendar.add(Calendar.MONTH, months)
+        val endDate = dateFormat.format(calendar.time)
+        return "$startDate - $endDate"
     }
 
     fun getActivePlan(): SubscriptionPlan? {

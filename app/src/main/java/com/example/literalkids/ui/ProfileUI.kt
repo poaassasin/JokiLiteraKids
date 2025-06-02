@@ -45,7 +45,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,30 +66,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
-
-data class UserData(
-    val id: String = "",
-    val fullName: String = "",
-    val username: String = "",
-    val level: Int = 1,
-    val currentXp: Int = 0,
-    val maxXp: Int = 100,
-    val age: Int = 0,
-    val gender: String? = null,
-    val schoolLevel: String = "",
-    val birthDate: String = "",
-    val avatarUrl: Int = 0,
-    val coins: Int = 0,
-    val phoneNumber: String = "",
-    val occupation: String = "",
-    val relationship: String = "",
-    val ownedAvatars: List<Int> = emptyList(),
-    val type: String = "",
-    val isLoading: Boolean = false
-)
+import com.example.literalkids.viewmodel.ProfileViewModel
+import com.example.literalkids.viewmodel.SubscriptionViewModel
 
 @Composable
 fun ProfileUI(
@@ -94,74 +79,66 @@ fun ProfileUI(
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    val profileViewModel: ProfileViewModel = viewModel()
+    val subscriptionViewModel: SubscriptionViewModel = viewModel()
+    val profileUiState by profileViewModel.uiState.collectAsState()
+    val subscriptionUiState by subscriptionViewModel.uiState.collectAsState()
 
-    var isLoggedIn by remember { mutableStateOf(false) }
     var isDarkMode by remember { mutableStateOf(false) }
+    var selectedLanguage by remember { mutableStateOf("Indonesia") }
     var showLanguageDialog by remember { mutableStateOf(false) }
 
-    val childState = UserData(
-        id = "user11",
-        fullName = "Levi Annora",
-        username = "leviannora",
-        level = 7,
-        currentXp = 90,
-        maxXp = 100,
-        age = 5,
-        gender = "perempuan",
-        schoolLevel = "TK",
-        birthDate = "7/4/2025",
-        avatarUrl = R.drawable.default_avatar,
-        coins = 450,
-        type = "child",
-        ownedAvatars = listOf(
-            R.drawable.default_avatar
-        )
-    )
-
-    val parentState = UserData(
-        id = "user12",
-        fullName = "Adinda Febyola",
-        username = "febydinda",
-        level = 38,
-        birthDate = "1995-02-20",
-        avatarUrl = R.drawable.parent_avatar,
-        phoneNumber = "082198765432",
-        occupation = "Ibu Rumah Tangga",
-        relationship = "Ibu",
-        type = "parent",
-    )
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .verticalScroll(scrollState)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(140.dp)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF5AD8FF),
-                            Color(0xFFDE99FF)
-                        )
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Profil",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+    MaterialTheme(
+        colorScheme = if (isDarkMode) {
+            darkColorScheme(
+                primary = Color(0xFF5DCCF8),
+                background = Color(0xFF121212),
+                surface = Color(0xFF1E1E1E),
+                onPrimary = Color.White,
+                onBackground = Color.White,
+                onSurface = Color.White
+            )
+        } else {
+            lightColorScheme(
+                primary = Color(0xFF5DCCF8),
+                background = Color.White,
+                surface = Color.White,
+                onPrimary = Color.White,
+                onBackground = Color.Black,
+                onSurface = Color.Black
             )
         }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .verticalScroll(scrollState)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF5AD8FF),
+                                Color(0xFFDE99FF)
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Profil",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        if (isLoggedIn) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -175,9 +152,9 @@ fun ProfileUI(
                 )
 
                 UserProfileCard(
-                    name = childState.fullName,
-                    username = "@" + childState.username,
-                    avatarUrl = childState.avatarUrl,
+                    name = profileUiState.childData.fullName,
+                    username = "@" + profileUiState.childData.username,
+                    avatarUrl = profileUiState.childData.avatarUrl,
                     onEditClick = { navController.navigate(Screen.ChildProfile.route) }
                 )
 
@@ -191,237 +168,196 @@ fun ProfileUI(
                 )
 
                 UserProfileCard(
-                    name = parentState.fullName,
-                    username = "@" + parentState.username,
-                    avatarUrl = parentState.avatarUrl,
+                    name = profileUiState.parentData.fullName,
+                    username = "@" + profileUiState.parentData.username,
+                    avatarUrl = profileUiState.parentData.avatarUrl,
                     onEditClick = { navController.navigate(Screen.ParentProfile.route) }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(Color(0xFF7BDDFB), Color(0xFFD7A5FF))
-                            ),
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .padding(16.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            painter = painterResource(id = R.drawable.sc_robot),
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text("Yay kamu sedang berlangganan!", color = Color.White)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Paket Hebat", color = Color.White, fontWeight = FontWeight.Bold)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Periode Berlangganan:" ,color = Color.White, fontSize = 10.sp)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("10/04/2025 - 10/07/2025", color = Color.White, fontSize = 10.sp)
-
+                val activePlan = subscriptionUiState.activePlan
+                if (activePlan != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(Color(0xFF7BDDFB), Color(0xFFD7A5FF))
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .clickable { navController.navigate(Screen.Subscription.route) }
+                            .padding(8.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(
+                                painter = painterResource(id = R.drawable.sc_robot),
+                                contentDescription = null,
+                                modifier = Modifier.size(40.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Yay kamu sedang berlangganan!", color = Color.White, fontSize = 12.sp)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(activePlan.title, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Periode Berlangganan:", color = Color.White, fontSize = 10.sp)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(activePlan.subscriptionPeriod ?: "Tidak tersedia", color = Color.White, fontSize = 10.sp)
+                            }
                         }
-                        Spacer(modifier = Modifier.weight(1f)) // mendorong ke kanan
-
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp)
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(Color(0xFF7BDDFB), Color(0xFFD7A5FF))
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .clickable { navController.navigate(Screen.Subscription.route) }
+                            .padding(8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
-                            text = "Perbarui Langganan",
-                            fontSize = 8.sp,
+                            text = "Belum ada langganan aktif. Mulai berlangganan sekarang!",
                             color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .clickable {
-                                     navController.navigate(Screen.Subscription.route)
-                                }
-                                .padding(start = 8.dp)
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(horizontal = 16.dp)
                         )
                     }
                 }
-
-            }
-        } else {
-            Button(
-                onClick = {
-                    isLoggedIn = true
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF5DCCF8)
-                )
-            ) {
-                Text(
-                    text = "Daftar Akun",
-                    fontSize = 18.sp,
-                    color = Color.White,
-                    fontWeight = FontWeight.Medium
-                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            @Suppress("DEPRECATION")
-            OutlinedButton(
-                onClick = {
-                    isLoggedIn = true
+            ProfileMenuItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Person,
+                        contentDescription = "Tentang Akun",
+                        tint = Color(0xFF5DCCF8),
+                        modifier = Modifier.size(24.dp)
+                    )
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                border = ButtonDefaults.outlinedButtonBorder.copy(
-                    brush = SolidColor(Color(0xFF5DCCF8))
-                ),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color(0xFF5DCCF8)
-                )
-            ) {
-                Text(
-                    text = "Login Akun",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-        }
+                title = "Tentang Akun Saya",
+                subtitle = "Informasi Dasar Seputar Akun Pengguna",
+                endIcon = Icons.Default.ChevronRight,
+                onClick = { showUnavailablePageToast(context) },
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            ProfileMenuItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Notifications,
+                        contentDescription = "Notifikasi",
+                        tint = Color(0xFF5DCCF8),
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                title = "Notifikasi",
+                subtitle = "Pengaturan Notifikasi Aplikasi",
+                endIcon = Icons.Default.ChevronRight,
+                onClick = { showUnavailablePageToast(context) },
+            )
 
-        ProfileMenuItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.Person,
-                    contentDescription = "Tentang Akun",
-                    tint = Color(0xFF5DCCF8),
-                    modifier = Modifier.size(24.dp)
-                )
-            },
-            title = "Tentang Akun Saya",
-            subtitle = "Informasi Dasar Seputar Akun Pengguna",
-            endIcon = Icons.Default.ChevronRight,
-//            onClick = { navController.navigate(Screen.AccountInfo.route) }
-            onClick = { showUnavailablePageToast(context) },
-        )
+            ProfileMenuItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Language,
+                        contentDescription = "Bahasa",
+                        tint = Color(0xFF5DCCF8),
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                title = "Bahasa",
+                subtitle = "Sesuaikan Bahasa Dengan Preferensimu",
+                endIcon = Icons.Default.ExpandMore,
+                onClick = { showLanguageDialog = !showLanguageDialog }
+            )
 
-        ProfileMenuItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.Notifications,
-                    contentDescription = "Notifikasi",
-                    tint = Color(0xFF5DCCF8),
-                    modifier = Modifier.size(24.dp)
-                )
-            },
-            title = "Notifikasi",
-            subtitle = "Pengaturan Notifikasi Aplikasi",
-            endIcon = Icons.Default.ChevronRight,
-//            onClick = { navController.navigate(Screen.Notifications.route) }
-            onClick = { showUnavailablePageToast(context) },
-        )
+            ProfileMenuToggleItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.DarkMode,
+                        contentDescription = "Tampilan",
+                        tint = Color(0xFF5DCCF8),
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                title = "Tampilan",
+                subtitle = "Ubah Tampilan Menjadi Dark Mode",
+                isChecked = isDarkMode,
+                onCheckedChange = { isDarkMode = !isDarkMode }
+            )
 
-        ProfileMenuItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.Language,
-                    contentDescription = "Bahasa",
-                    tint = Color(0xFF5DCCF8),
-                    modifier = Modifier.size(24.dp)
-                )
-            },
-            title = "Bahasa",
-            subtitle = "Sesuaikan Bahasa Dengan Preferensimu",
-            endIcon = Icons.Default.ExpandMore,
-            onClick = { showLanguageDialog = !showLanguageDialog }
-        )
+            ProfileMenuItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Security,
+                        contentDescription = "Kebijakan Privasi",
+                        tint = Color(0xFF5DCCF8),
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                title = "Kebijakan Privasi",
+                subtitle = "Penjelasan Perlindungan Data Akun",
+                endIcon = Icons.Default.ChevronRight,
+                onClick = { showUnavailablePageToast(context) },
+            )
 
-        ProfileMenuToggleItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.DarkMode,
-                    contentDescription = "Tampilan",
-                    tint = Color(0xFF5DCCF8),
-                    modifier = Modifier.size(24.dp)
-                )
-            },
-            title = "Tampilan",
-            subtitle = "Ubah Tampilan Menjadi Dark Mode",
-            isChecked = isDarkMode,
-            onCheckedChange = { isDarkMode = !isDarkMode }
-        )
+            ProfileMenuItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Description,
+                        contentDescription = "Syarat Penggunaan",
+                        tint = Color(0xFF5DCCF8),
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                title = "Syarat Penggunaan",
+                subtitle = "Ketentuan & Aturan Penggunaan Aplikasi",
+                endIcon = Icons.Default.ChevronRight,
+                onClick = { showUnavailablePageToast(context) },
+            )
 
-        ProfileMenuItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.Security,
-                    contentDescription = "Kebijakan Privasi",
-                    tint = Color(0xFF5DCCF8),
-                    modifier = Modifier.size(24.dp)
-                )
-            },
-            title = "Kebijakan Privasi",
-            subtitle = "Penjelasan Perlindungan Data Akun",
-            endIcon = Icons.Default.ChevronRight,
-//            onClick = { navController.navigate(Screen.PrivacyPolicy.route) }
-            onClick = { showUnavailablePageToast(context) },
-        )
+            ProfileMenuItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Lock,
+                        contentDescription = "Keamanan",
+                        tint = Color(0xFF5DCCF8),
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                title = "Keamanan",
+                subtitle = "Lakukan Autentikasi Akun Di Sini",
+                endIcon = Icons.Default.ChevronRight,
+                onClick = { showUnavailablePageToast(context) },
+            )
 
-        ProfileMenuItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.Description,
-                    contentDescription = "Syarat Penggunaan",
-                    tint = Color(0xFF5DCCF8),
-                    modifier = Modifier.size(24.dp)
-                )
-            },
-            title = "Syarat Penggunaan",
-            subtitle = "Ketentuan & Aturan Penggunaan Aplikasi",
-            endIcon = Icons.Default.ChevronRight,
-//            onClick = { navController.navigate(Screen.TermsOfService.route) }
-            onClick = { showUnavailablePageToast(context) },
-        )
+            ProfileMenuItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Update,
+                        contentDescription = "Pembaruan Aplikasi",
+                        tint = Color(0xFF5DCCF8),
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                title = "Pembaruan Aplikasi",
+                subtitle = "Informasi Versi Dan Fitur Terbaru Aplikasi",
+                endIcon = Icons.Default.ChevronRight,
+                onClick = { showUnavailablePageToast(context) },
+            )
 
-        ProfileMenuItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.Lock,
-                    contentDescription = "Keamanan",
-                    tint = Color(0xFF5DCCF8),
-                    modifier = Modifier.size(24.dp)
-                )
-            },
-            title = "Keamanan",
-            subtitle = "Lakukan Autentikasi Akun Di Sini",
-            endIcon = Icons.Default.ChevronRight,
-//            onClick = { navController.navigate(Screen.Security.route) }
-            onClick = { showUnavailablePageToast(context) },
-        )
-
-        ProfileMenuItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Outlined.Update,
-                    contentDescription = "Pembaruan Aplikasi",
-                    tint = Color(0xFF5DCCF8),
-                    modifier = Modifier.size(24.dp)
-                )
-            },
-            title = "Pembaruan Aplikasi",
-            subtitle = "Informasi Versi Dan Fitur Terbaru Aplikasi",
-            endIcon = Icons.Default.ChevronRight,
-//            onClick = { navController.navigate(Screen.AppUpdate.route) }
-            onClick = { showUnavailablePageToast(context) },
-        )
-
-        if (isLoggedIn) {
             ProfileMenuItem(
                 icon = {
                     Icon(
@@ -434,38 +370,36 @@ fun ProfileUI(
                 title = "Keluar",
                 subtitle = "Untuk Keluar Akun",
                 endIcon = Icons.Default.ChevronRight,
-                onClick = { isLoggedIn = false }
+                onClick = { /* Logika logout di sini */ }
+            )
+
+            Spacer(modifier = Modifier.height(80.dp))
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 16.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            BottomNavigation(
+                currentRoute = Screen.Profile.route,
+                onNavigate = { route ->
+                    navController.navigate(route) {
+                        popUpTo(navController.graph.startDestinationId)
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 
-        Spacer(modifier = Modifier.height(80.dp))
-
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = 16.dp),
-        contentAlignment = Alignment.BottomCenter
-    ) {
-        BottomNavigation(
-            currentRoute = Screen.Profile.route,
-            onNavigate = { route ->
-                navController.navigate(route) {
-                    popUpTo(navController.graph.startDestinationId)
-                    launchSingleTop = true
-                }
-            }
-        )
-    }
-
-    // Language Dialog
-    if (showLanguageDialog) {
-        LanguageSelectionDialog(
-            selectedLanguage = "",
-            onLanguageSelected = {  },
-            onDismiss = { showLanguageDialog = !showLanguageDialog }
-        )
+        if (showLanguageDialog) {
+            LanguageSelectionDialog(
+                selectedLanguage = selectedLanguage,
+                onLanguageSelected = { selectedLanguage = it },
+                onDismiss = { showLanguageDialog = false }
+            )
+        }
     }
 }
 
@@ -670,7 +604,8 @@ fun LanguageSelectionDialog(
             Text(
                 text = "Pilih Bahasa",
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
         },
         text = {
@@ -687,7 +622,8 @@ fun LanguageSelectionDialog(
                             selected = language == selectedLanguage,
                             onClick = { onLanguageSelected(language) },
                             colors = RadioButtonDefaults.colors(
-                                selectedColor = Color(0xFF5DCCF8)
+                                selectedColor = Color(0xFF5DCCF8),
+                                unselectedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                         )
 
@@ -695,7 +631,8 @@ fun LanguageSelectionDialog(
 
                         Text(
                             text = language,
-                            fontSize = 16.sp
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -711,6 +648,9 @@ fun LanguageSelectionDialog(
                     fontWeight = FontWeight.Bold
                 )
             }
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurface
     )
 }

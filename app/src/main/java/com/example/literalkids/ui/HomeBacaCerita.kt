@@ -3,34 +3,34 @@ package com.example.literalkids.ui
 import androidx.compose.foundation.*
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.*
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
+import com.example.literalkids.viewmodel.HomeBacaCeritaViewModel
 
 @Composable
-fun HomeBacaCerita(navController: NavController) {
+fun HomeBacaCerita(navController: NavController, viewModel: HomeBacaCeritaViewModel = viewModel()) {
+    val uiState by viewModel.uiState.collectAsState()
     val gradientBackground = Brush.horizontalGradient(
         colors = listOf(Color(0xFF7DE2FC), Color(0xFFB9B6FF))
     )
@@ -41,7 +41,7 @@ fun HomeBacaCerita(navController: NavController) {
             .verticalScroll(rememberScrollState())
             .background(Color.White)
     ) {
-        // Header baru dengan tombol kembali dan judul
+        // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -58,12 +58,12 @@ fun HomeBacaCerita(navController: NavController) {
                     modifier = Modifier
                         .size(24.dp)
                         .clickable {
-                            navController.navigate(Screen.Profile.route)
+                            navController.navigate(Screen.Homepage.route)
                         }
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = "Kancil Mencuri Ketimun",
+                    text = uiState.storyTitle,
                     style = MaterialTheme.typography.titleLarge.copy(color = Color.White)
                 )
             }
@@ -86,8 +86,8 @@ fun HomeBacaCerita(navController: NavController) {
                     .align(Alignment.TopEnd)
                     .padding(16.dp)
             ) {
-                HeaderBadge(icon = Icons.Default.Book, text = "4,2 Ribu Dibaca")
-                HeaderBadge(icon = Icons.Default.FavoriteBorder, text = "Favorit")
+                HeaderBadge(icon = Icons.Default.Book, text = uiState.readCount)
+                HeaderBadge(icon = Icons.Default.FavoriteBorder, text = uiState.favoriteLabel)
             }
 
             Column(
@@ -96,12 +96,12 @@ fun HomeBacaCerita(navController: NavController) {
                     .padding(start = 16.dp, bottom = 32.dp)
             ) {
                 Text(
-                    text = "Komedi",
+                    text = uiState.genre,
                     color = Color.White,
                     fontSize = 14.sp
                 )
                 Text(
-                    text = "Kancil Mencuri Ketimun",
+                    text = uiState.storyTitle,
                     color = Color.White,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
@@ -122,7 +122,7 @@ fun HomeBacaCerita(navController: NavController) {
             // XP Button
             Surface(
                 shape = capsuleShape,
-                tonalElevation = 4.dp, // untuk shadow
+                tonalElevation = 4.dp,
                 shadowElevation = 4.dp,
                 color = Color.Transparent
             ) {
@@ -138,14 +138,14 @@ fun HomeBacaCerita(navController: NavController) {
                         .padding(1.dp)
                 ) {
                     Button(
-                        onClick = {},
+                        onClick = { viewModel.onXpButtonClicked() },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                         shape = capsuleShape,
                         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
                         modifier = Modifier.height(40.dp)
                     ) {
-                        Text("+60 xp", color = Color(0xFF00475D), fontWeight = FontWeight.Bold)
+                        Text(uiState.xpReward, color = Color(0xFF00475D), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -171,14 +171,14 @@ fun HomeBacaCerita(navController: NavController) {
                         .padding(1.dp)
                 ) {
                     Button(
-                        onClick = {},
+                        onClick = { viewModel.onCoinButtonClicked() },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                         shape = capsuleShape,
                         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
                         modifier = Modifier.height(40.dp)
                     ) {
-                        Text("+20 koin", color = Color(0xFF00475D), fontWeight = FontWeight.Bold)
+                        Text(uiState.coinReward, color = Color(0xFF00475D), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -195,7 +195,7 @@ fun HomeBacaCerita(navController: NavController) {
         )
 
         Text(
-            text = "Si Kancil yang cerdik menyelinap ke kebun petani untuk mencuri ketimun segar. Namun, ia tertangkap jebakan yang dipasang oleh petani. Dengan akalnya, kancil berpura-pura menyesal dan menipu petani hingga akhirnya berhasil melarikan diri.",
+            text = uiState.synopsis,
             fontSize = 14.sp,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             color = Color(0xFF00475D)
@@ -204,7 +204,7 @@ fun HomeBacaCerita(navController: NavController) {
         Spacer(modifier = Modifier.height(180.dp))
 
         Button(
-            onClick = {  navController.navigate(Screen.BacaCeritaScreen.route) },
+            onClick = { navController.navigate(Screen.BacaCeritaScreen.route) },
             shape = RoundedCornerShape(50),
             modifier = Modifier
                 .fillMaxWidth()
@@ -237,11 +237,4 @@ fun HeaderBadge(icon: ImageVector, text: String) {
         Spacer(modifier = Modifier.width(6.dp))
         Text(text = text, color = Color.White, fontSize = 12.sp)
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun KancilStoryScreenPreview() {
-    val navController = rememberNavController()
-    HomeBacaCerita(navController = navController)
 }

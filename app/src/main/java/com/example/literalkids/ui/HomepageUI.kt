@@ -257,7 +257,7 @@ fun HomepageUI(navController: NavController, viewModel: HomepageViewModel = view
                             imageRes = story.imageRes,
                             title = story.title,
                             progress = story.progress,
-                            onClick = { navController.navigate("storyReader/${story.id}") }
+                            onClick = { navController.navigate(Screen.HomeBacaCerita.route) }
                         )
                     }
                 }

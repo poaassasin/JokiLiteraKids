@@ -4,34 +4,17 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,9 +26,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
+import com.example.literalkids.viewmodel.ProfileViewModel
 
 @Composable
 fun ChildProfileUI(
@@ -53,30 +38,9 @@ fun ChildProfileUI(
     onBackClick: () -> Unit = { navController.popBackStack() },
 ) {
     val context = LocalContext.current
-
-    var state by remember {
-        mutableStateOf(
-            UserData(
-                id = "user11",
-                fullName = "Levi Annora",
-                username = "leviannora",
-                level = 7,
-                currentXp = 90,
-                maxXp = 100,
-                age = 5,
-                gender = "perempuan",
-                schoolLevel = "TK",
-                birthDate = "7/4/2025",
-                avatarUrl = R.drawable.default_avatar,
-                coins = 450,
-                type = "child",
-                ownedAvatars = listOf(
-                    R.drawable.default_avatar
-                ),
-                isLoading = false
-            )
-        )
-    }
+    val profileViewModel: ProfileViewModel = viewModel()
+    val uiState by profileViewModel.uiState.collectAsState()
+    val childData = uiState.childData
 
     Box(
         modifier = Modifier
@@ -140,7 +104,7 @@ fun ChildProfileUI(
                             .background(Color.White)
                     ) {
                         Image(
-                            painter = painterResource(id = state.avatarUrl),
+                            painter = painterResource(id = childData.avatarUrl),
                             contentDescription = "Avatar",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
@@ -169,7 +133,7 @@ fun ChildProfileUI(
                 }
 
                 Text(
-                    text = state.fullName,
+                    text = childData.fullName,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF0A617A),
@@ -177,7 +141,7 @@ fun ChildProfileUI(
                 )
 
                 Text(
-                    text = "@${state.username}",
+                    text = "@${childData.username}",
                     fontSize = 14.sp,
                     color = Color.Gray,
                     modifier = Modifier.padding(top = 4.dp)
@@ -197,7 +161,7 @@ fun ChildProfileUI(
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "Level ${state.level}",
+                        text = "Level ${childData.level}",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color(0xFF0A617A),
@@ -219,7 +183,7 @@ fun ChildProfileUI(
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(state.currentXp.toFloat() / state.maxXp)
+                                .fillMaxWidth(childData.currentXp.toFloat() / childData.maxXp)
                                 .height(12.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
@@ -240,7 +204,7 @@ fun ChildProfileUI(
                             .padding(top = 4.dp)
                     ) {
                         Text(
-                            text = "${state.currentXp} / ${state.maxXp} XP",
+                            text = "${childData.currentXp} / ${childData.maxXp} XP",
                             fontSize = 12.sp,
                             color = Color.Gray
                         )
@@ -260,9 +224,16 @@ fun ChildProfileUI(
                     )
 
                     OutlinedTextField(
-                        value = state.fullName,
+                        value = childData.fullName,
                         onValueChange = { newValue ->
-                            state = state.copy(fullName = newValue) },
+                            profileViewModel.updateChildProfile(
+                                fullName = newValue,
+                                age = childData.age,
+                                gender = childData.gender,
+                                schoolLevel = childData.schoolLevel,
+                                birthDate = childData.birthDate
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text("Masukkan nama lengkap") },
                         shape = RoundedCornerShape(20.dp),
@@ -276,9 +247,16 @@ fun ChildProfileUI(
                     )
 
                     OutlinedTextField(
-                        value = state.age.toString(),
+                        value = childData.age.toString(),
                         onValueChange = { newValue ->
-                            state = state.copy(age = newValue.toInt()) },
+                            profileViewModel.updateChildProfile(
+                                fullName = childData.fullName,
+                                age = newValue.toIntOrNull() ?: childData.age,
+                                gender = childData.gender,
+                                schoolLevel = childData.schoolLevel,
+                                birthDate = childData.birthDate
+                            )
+                        },
                         placeholder = { Text("Masukkan usia") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(20.dp),
@@ -296,8 +274,16 @@ fun ChildProfileUI(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         RadioButton(
-                            selected = state.gender == "laki-laki",
-                            onClick = { state = state.copy(gender = "laki-laki") },
+                            selected = childData.gender == "laki-laki",
+                            onClick = {
+                                profileViewModel.updateChildProfile(
+                                    fullName = childData.fullName,
+                                    age = childData.age,
+                                    gender = "laki-laki",
+                                    schoolLevel = childData.schoolLevel,
+                                    birthDate = childData.birthDate
+                                )
+                            },
                             colors = RadioButtonDefaults.colors(
                                 selectedColor = Color(0xFF5AD8FF),
                                 unselectedColor = Color(0xFF5AD8FF)
@@ -310,8 +296,16 @@ fun ChildProfileUI(
                         )
 
                         RadioButton(
-                            selected = state.gender == "perempuan",
-                            onClick = { state = state.copy(gender = "perempuan") },
+                            selected = childData.gender == "perempuan",
+                            onClick = {
+                                profileViewModel.updateChildProfile(
+                                    fullName = childData.fullName,
+                                    age = childData.age,
+                                    gender = "perempuan",
+                                    schoolLevel = childData.schoolLevel,
+                                    birthDate = childData.birthDate
+                                )
+                            },
                             colors = RadioButtonDefaults.colors(
                                 selectedColor = Color(0xFF5AD8FF),
                                 unselectedColor = Color(0xFF5AD8FF)
@@ -333,9 +327,15 @@ fun ChildProfileUI(
                     )
 
                     SchoolLevelSelector(
-                        currentValue = state.schoolLevel,
+                        currentValue = childData.schoolLevel,
                         onValueSelected = { newValue ->
-                            state = state.copy(schoolLevel = newValue)
+                            profileViewModel.updateChildProfile(
+                                fullName = childData.fullName,
+                                age = childData.age,
+                                gender = childData.gender,
+                                schoolLevel = newValue,
+                                birthDate = childData.birthDate
+                            )
                         }
                     )
 
@@ -347,9 +347,16 @@ fun ChildProfileUI(
                     )
 
                     DatePicker(
-                        currentValue = state.birthDate,
+                        currentValue = childData.birthDate,
                         onDateSelected = { newValue ->
-                            state = state.copy(birthDate = newValue) }
+                            profileViewModel.updateChildProfile(
+                                fullName = childData.fullName,
+                                age = childData.age,
+                                gender = childData.gender,
+                                schoolLevel = childData.schoolLevel,
+                                birthDate = newValue
+                            )
+                        }
                     )
 
                     Button(
@@ -364,7 +371,7 @@ fun ChildProfileUI(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF5AD8FF),
                         ),
-                        enabled = !state.isLoading
+                        enabled = !childData.isLoading
                     ) {
                         Text(
                             text = "Perbarui Profil",
