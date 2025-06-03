@@ -1,4 +1,4 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.bacaBuku
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.border

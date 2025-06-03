@@ -1,4 +1,4 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.perpustakaan
 
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -31,6 +31,7 @@ import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
 import com.example.literalkids.viewmodel.LibraryViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.literalkids.ui.navbar.BottomNavigation
 
 @Composable
 fun LibraryScreen(navController: NavController, viewModel: LibraryViewModel = viewModel()) {

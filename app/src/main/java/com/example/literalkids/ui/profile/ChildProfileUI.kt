@@ -1,4 +1,4 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.profile
 
 import android.widget.Toast
 import androidx.compose.foundation.Image

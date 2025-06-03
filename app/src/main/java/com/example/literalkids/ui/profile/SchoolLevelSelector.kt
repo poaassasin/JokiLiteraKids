@@ -1,4 +1,4 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.profile
 
 import androidx.compose.runtime.Composable
 

@@ -1,4 +1,4 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.leaderboard
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -59,6 +59,7 @@ import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
 import com.example.literalkids.viewmodel.LeaderboardState
 import com.example.literalkids.viewmodel.LeaderboardUser
+import com.example.literalkids.viewmodel.getLeaderboardUsers
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +72,7 @@ fun LeaderboardUI(
 
     LaunchedEffect(key1 = true) {
         try {
-            val users = com.example.literalkids.viewmodel.getLeaderboardUsers()
+            val users = getLeaderboardUsers()
             leaderboardState = LeaderboardState.Success(users)
         } catch (e: Exception) {
             leaderboardState = LeaderboardState.Error("Error loading leaderboard: ${e.message}")

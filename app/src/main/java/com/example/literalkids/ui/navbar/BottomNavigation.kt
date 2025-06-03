@@ -1,4 +1,4 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.navbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -59,7 +59,7 @@ fun BottomNavigation(
             icon = Icons.Outlined.Groups,
             label = "Komunitas",
             isSelected = false,
-            onClick = {  }
+            onClick = { onNavigate(Screen.ParentActivityScreen.route) }
         )
 
         BottomNavItem(

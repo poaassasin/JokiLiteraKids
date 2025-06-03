@@ -11,23 +11,25 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.navigation.Screen
-import com.example.literalkids.ui.AvatarSelectionUI
-import com.example.literalkids.ui.BacaCeritaScreenUI
-import com.example.literalkids.ui.ChildProfileUI
-import com.example.literalkids.ui.GenreSearchUI
-import com.example.literalkids.ui.HomeBacaCerita
-import com.example.literalkids.ui.LeaderboardUI
-import com.example.literalkids.ui.LibraryScreen
-import com.example.literalkids.ui.LoginUI
-import com.example.literalkids.ui.ParentProfileUI
-import com.example.literalkids.ui.ProfileUI
-import com.example.literalkids.ui.QuizResultScreen
-import com.example.literalkids.ui.QuizScreen
-import com.example.literalkids.ui.RegisterUI
-import com.example.literalkids.ui.SearchUI
-import com.example.literalkids.ui.SubscriptionUI
-import com.example.literalkids.ui.HomepageUI
-import com.example.literalkids.ui.OnboardingScreen
+import com.example.literalkids.ui.profile.AvatarSelectionUI
+import com.example.literalkids.ui.bacaBuku.BacaCeritaScreenUI
+import com.example.literalkids.ui.parentScreen.ParentActivityScreen
+import com.example.literalkids.ui.parentScreen.ArticleDetailScreen
+import com.example.literalkids.ui.profile.ChildProfileUI
+import com.example.literalkids.ui.search.GenreSearchUI
+import com.example.literalkids.ui.bacaBuku.HomeBacaCerita
+import com.example.literalkids.ui.leaderboard.LeaderboardUI
+import com.example.literalkids.ui.perpustakaan.LibraryScreen
+import com.example.literalkids.ui.auth.LoginUI
+import com.example.literalkids.ui.profile.ParentProfileUI
+import com.example.literalkids.ui.profile.ProfileUI
+import com.example.literalkids.ui.quiz.QuizResultScreen
+import com.example.literalkids.ui.quiz.QuizScreen
+import com.example.literalkids.ui.auth.RegisterUI
+import com.example.literalkids.ui.search.SearchUI
+import com.example.literalkids.ui.subscription.SubscriptionUI
+import com.example.literalkids.ui.homepage.HomepageUI
+import com.example.literalkids.ui.boardingPage.OnboardingScreen
 import com.example.literalkids.ui.theme.LiteralkidsTheme
 import com.example.literalkids.viewmodel.ProfileViewModel
 
@@ -135,6 +137,14 @@ fun MainNavigation() {
             // Halaman Quiz Result
             composable(Screen.QuizResult.route) {
                 QuizResultScreen(navController = navController)
+            }
+
+            composable(Screen.ParentActivityScreen.route) {
+                ParentActivityScreen(navController = navController)
+            }
+
+            composable(Screen.ArticleDetail.route) {
+                ArticleDetailScreen()
             }
         }
     }

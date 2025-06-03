@@ -1,4 +1,4 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.bacaBuku
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable

@@ -1,4 +1,4 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.boardingPage
 
 import android.util.Log
 import androidx.compose.animation.core.animateIntAsState
@@ -25,14 +25,16 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
+import com.example.literalkids.ui.OnboardingViewModel
 import com.google.accompanist.pager.*
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewModel = viewModel()) {
     val currentPage by viewModel.currentPage
     val context = LocalContext.current
     val pagerState = rememberPagerState(initialPage = 0)

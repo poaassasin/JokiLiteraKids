@@ -1,4 +1,4 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.bacaBuku
 
 import android.content.Context
 import android.speech.tts.TextToSpeech
@@ -21,7 +21,7 @@ import androidx.navigation.NavController
 import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
 import com.example.literalkids.viewmodel.BacaCeritaViewModel
-import com.example.literalkids.viewmodel.CeritaPage
+import java.util.Locale
 
 @Composable
 fun BacaCeritaScreenUI(
@@ -35,7 +35,7 @@ fun BacaCeritaScreenUI(
     // Inisialisasi TTS di UI karena butuh Context
     val tts = remember {
         TextToSpeech(context) {}.apply {
-            language = java.util.Locale("id", "ID")
+            TextToSpeech.setLanguage = Locale("id", "ID")
         }
     }
 

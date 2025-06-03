@@ -1,4 +1,4 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.profile
 
 import android.app.DatePickerDialog
 import androidx.compose.foundation.clickable

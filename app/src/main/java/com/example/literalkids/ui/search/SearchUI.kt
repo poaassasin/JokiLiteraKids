@@ -1,4 +1,4 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.search
 
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.literalkids.R
-import com.example.literalkids.navigation.Screen
 import com.example.literalkids.viewmodel.SearchViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 

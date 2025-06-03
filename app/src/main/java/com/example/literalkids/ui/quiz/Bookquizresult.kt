@@ -1,4 +1,4 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.quiz
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

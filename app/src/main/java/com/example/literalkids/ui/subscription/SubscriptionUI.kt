@@ -1,4 +1,4 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.subscription
 
 import android.util.Log
 import androidx.compose.foundation.Image

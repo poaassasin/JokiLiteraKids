@@ -1,4 +1,4 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.search
 
 import android.util.Log
 import androidx.compose.foundation.*

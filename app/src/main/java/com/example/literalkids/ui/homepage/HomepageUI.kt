@@ -1,4 +1,4 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.homepage
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -21,6 +21,7 @@ import androidx.navigation.NavController
 import com.example.literalkids.navigation.Screen
 import com.example.literalkids.viewmodel.HomepageViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.literalkids.ui.navbar.BottomNavigation
 
 @Composable
 fun HomepageUI(navController: NavController, viewModel: HomepageViewModel = viewModel()) {

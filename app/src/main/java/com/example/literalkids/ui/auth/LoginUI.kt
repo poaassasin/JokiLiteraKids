@@ -1,41 +1,76 @@
-package com.example.literalkids.ui
+package com.example.literalkids.ui.auth
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
-import com.example.literalkids.viewmodel.RegisterViewModel
+import com.example.literalkids.viewmodel.LoginViewModel
 
 @Composable
-fun RegisterUI(navController: NavController, viewModel: RegisterViewModel = viewModel()) {
+fun CurvedHeader() {
+    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp + statusBarHeight)
+            .padding(top = statusBarHeight)
+    ) {
+        val width = size.width
+        val height = size.height
+
+        val path = Path().apply {
+            moveTo(0f, height * 0.85f)
+            cubicTo(
+                width * 0.20f, height * 0.10f,
+                width * 0.75f, height * 0.04f,
+                width, height * 0.3f
+            )
+            lineTo(width, 0f)
+            lineTo(0f, 0f)
+            close()
+        }
+
+        drawPath(path = path, color = Color(0xFF64D2FF))
+    }
+}
+
+@Composable
+fun LoginUI(
+    navController: NavController,
+    viewModel: LoginViewModel = viewModel()
+) {
+    val email by viewModel.email.collectAsState()
+    val password by viewModel.password.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
+            .zIndex(0f)
     ) {
         CurvedHeader()
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .zIndex(1f),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(40.dp))
@@ -53,24 +88,13 @@ fun RegisterUI(navController: NavController, viewModel: RegisterViewModel = view
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-
-            Text("Daftar", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-
+            Text("Log In", fontSize = 30.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(40.dp))
 
             OutlinedTextField(
-                value = viewModel.email,
-                onValueChange = { viewModel.email = it },
+                value = email,
+                onValueChange = viewModel::onEmailChange,
                 placeholder = { Text("Email") },
-                trailingIcon = {
-                    if (viewModel.isEmailValid) {
-                        Image(
-                            painter = painterResource(id = R.drawable.tombol_check),
-                            contentDescription = "Valid",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(55.dp),
@@ -80,8 +104,8 @@ fun RegisterUI(navController: NavController, viewModel: RegisterViewModel = view
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = viewModel.password,
-                onValueChange = { viewModel.password = it },
+                value = password,
+                onValueChange = viewModel::onPasswordChange,
                 placeholder = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
@@ -90,25 +114,21 @@ fun RegisterUI(navController: NavController, viewModel: RegisterViewModel = view
                 shape = RoundedCornerShape(25.dp)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            OutlinedTextField(
-                value = viewModel.confirmPassword,
-                onValueChange = { viewModel.confirmPassword = it },
-                placeholder = { Text("Confirm Password") },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-                shape = RoundedCornerShape(25.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text("Lupa password?", color = Color.Gray, fontSize = 12.sp)
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                    viewModel.login {
+                        navController.navigate(Screen.OnBoarding1.route)
                     }
                 },
                 modifier = Modifier
@@ -117,7 +137,7 @@ fun RegisterUI(navController: NavController, viewModel: RegisterViewModel = view
                 shape = RoundedCornerShape(25.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64D2FF))
             ) {
-                Text("Buat Akun", color = Color.White, fontSize = 16.sp)
+                Text("Login", color = Color.White, fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -138,7 +158,7 @@ fun RegisterUI(navController: NavController, viewModel: RegisterViewModel = view
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 OutlinedButton(
-                    onClick = { /* Login dengan Google */ },
+                    onClick = { /* TODO: Google Login */ },
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier
                         .padding(8.dp)
@@ -154,7 +174,7 @@ fun RegisterUI(navController: NavController, viewModel: RegisterViewModel = view
                 }
 
                 OutlinedButton(
-                    onClick = { /* Login dengan Facebook */ },
+                    onClick = { /* TODO: Facebook Login */ },
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier
                         .padding(8.dp)
@@ -176,38 +196,18 @@ fun RegisterUI(navController: NavController, viewModel: RegisterViewModel = view
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Sudah punya akun?", color = Color.Gray, fontSize = 12.sp)
+                Text("Belum punya akun?", color = Color.Gray, fontSize = 12.sp)
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    "Login",
+                    "Daftar",
                     color = Color(0xFF64D2FF),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable {
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
-                        }
+                        navController.navigate(Screen.Register.route)
                     }
                 )
             }
-        }
-
-        Box(
-            modifier = Modifier
-                .offset(x = 16.dp, y = 40.dp)
-                .size(40.dp)
-                .background(Color(0xFF64D2FF), shape = CircleShape)
-                .border(2.dp, Color.White, CircleShape)
-                .clickable {
-                    navController.popBackStack()
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.tombol_back),
-                contentDescription = "Back",
-                modifier = Modifier.size(20.dp)
-            )
         }
     }
 }
