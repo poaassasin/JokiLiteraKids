@@ -1,4 +1,4 @@
-package com.example.literalkids.ui.parentScreen
+package com.example.literalkids.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -18,7 +18,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,9 +25,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun ParentActivityScreen(navController: NavController) {
+fun ParentActivityScreen(navController: NavController, viewModel: ParentActivityViewModel = viewModel()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -71,26 +71,21 @@ fun ParentActivityScreen(navController: NavController) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Tampilkan Berdasarkan", fontWeight = FontWeight.Medium)
                 Spacer(modifier = Modifier.height(8.dp))
-                var expanded by remember { mutableStateOf(false) }
-                var selected by remember { mutableStateOf("Mingguan") }
 
                 Box {
                     Button(
-                        onClick = { expanded = true },
+                        onClick = { viewModel.toggleDropdownMenu() },
                         shape = CircleShape,
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF76D0FF))
                     ) {
-                        Text(selected, color = Color.White)
+                        Text(viewModel.selected.value, color = Color.White)
                     }
 
-                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    DropdownMenu(expanded = viewModel.expanded.value, onDismissRequest = { viewModel.toggleDropdownMenu() }) {
                         listOf("Harian", "Mingguan", "Bulanan").forEach {
                             DropdownMenuItem(
                                 text = { Text(it) },
-                                onClick = {
-                                    selected = it
-                                    expanded = false
-                                }
+                                onClick = { viewModel.onDropdownMenuItemSelected(it) }
                             )
                         }
                     }
@@ -110,7 +105,7 @@ fun ParentActivityScreen(navController: NavController) {
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-                BarChart()
+                BarChart(data = viewModel.data, labels = viewModel.labels)
             }
         }
 
@@ -131,46 +126,7 @@ fun ParentActivityScreen(navController: NavController) {
 }
 
 @Composable
-fun DonutChart(percent: Float, centerText: String) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.size(140.dp) // Ukuran yang lebih besar untuk visibilitas yang lebih baik
-    ) {
-        Canvas(modifier = Modifier.size(120.dp)) {
-
-            drawArc(
-                color = Color(0xFFE0E0E0),
-                startAngle = 0f,
-                sweepAngle = 360f,
-                useCenter = false,
-                style = Stroke(width = 24f, cap = StrokeCap.Round) // Lebar garis yang lebih besar untuk tampilan yang lebih rapi
-            )
-
-            drawArc(
-                color = Color(0xFF76D0FF),
-                startAngle = -90f,
-                sweepAngle = percent * 360f,
-                useCenter = false,
-                style = Stroke(width = 24f, cap = StrokeCap.Round) // Lebar garis yang lebih besar untuk tampilan yang lebih rapi
-            )
-        }
-
-        // Teks di tengah donut chart
-        Text(
-            centerText,
-            fontSize = 18.sp, // Ukuran font yang lebih besar agar lebih terlihat jelas
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFFB36FF1), // Warna teks ungu agar sesuai dengan desain
-            lineHeight = 22.sp, // Jarak antar baris teks agar lebih rapi
-            textAlign = TextAlign.Center // Penjajaran teks di tengah
-        )
-    }
-}
-
-@Composable
-fun BarChart() {
-    val data = listOf(0.2f, 0.4f, 0.6f, 0.4f, 0.5f, 0.9f, 0.0f)
-    val labels = listOf("Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu")
+fun BarChart(data: List<Float>, labels: List<String>) {
     val barColor = Color(0xFF76D0FF)
     val highlightColor = Color(0xFFB36FF1)
 
@@ -207,6 +163,44 @@ fun BarChart() {
 }
 
 @Composable
+fun DonutChart(percent: Float, centerText: String) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.size(140.dp) // Set the size for the donut chart container
+    ) {
+        Canvas(modifier = Modifier.size(120.dp)) {
+            // Draw the background arc (gray color, full circle)
+            drawArc(
+                color = Color(0xFFE0E0E0),
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                style = Stroke(width = 24f, cap = StrokeCap.Round) // Set the stroke width
+            )
+
+            // Draw the actual donut (colored section based on percentage)
+            drawArc(
+                color = Color(0xFF76D0FF),
+                startAngle = -90f, // Start from the top (12 o'clock position)
+                sweepAngle = percent * 360f, // Sweep the angle based on the percentage
+                useCenter = false,
+                style = Stroke(width = 24f, cap = StrokeCap.Round) // Set the stroke width
+            )
+        }
+
+        // Center text
+        Text(
+            centerText,
+            fontSize = 18.sp, // Font size of the center text
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFB36FF1), // Set the text color
+            lineHeight = 22.sp, // Line height for spacing
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center // Center-align the text
+        )
+    }
+}
+
+@Composable
 fun ArticleSection(navController: NavController) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -224,24 +218,36 @@ fun ArticleSection(navController: NavController) {
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Menggunakan gambar yang berbeda untuk artikel pertama dan kedua
             ArticleCard(
                 title = "Bagaimana Membiasakan Anak Membaca Setiap Hari?",
                 category = "Kebiasaan",
                 description = "Membaca setiap hari bisa menjadi tantangan bagi anak...",
-                navController = navController
+                navController = navController,
+                imageResId = R.drawable.anak, // Gambar pertama
+                articleId = 1 // ID artikel pertama
             )
             ArticleCard(
                 title = "Waktu Membaca Terfavorit Anak",
                 category = "Tips Parenting",
                 description = "Mengetahui waktu membaca terfavorit anak dapat membantu...",
-                navController = navController
+                navController = navController,
+                imageResId = R.drawable.ibuu, // Gambar kedua
+                articleId = 2 // ID artikel kedua
             )
         }
     }
 }
 
 @Composable
-fun ArticleCard(title: String, category: String, description: String, navController: NavController) {
+fun ArticleCard(
+    title: String,
+    category: String,
+    description: String,
+    navController: NavController,
+    imageResId: Int, // Parameter baru untuk mengganti gambar
+    articleId: Int // Parameter untuk menentukan artikel mana yang diklik
+) {
     Card(
         modifier = Modifier
             .width(200.dp)
@@ -250,16 +256,17 @@ fun ArticleCard(title: String, category: String, description: String, navControl
         elevation = CardDefaults.cardElevation(6.dp)
     ) {
         Column {
+            // Mengatur gambar agar proporsional dan konsisten
             Box(
                 modifier = Modifier
-                    .height(120.dp)
-                    .fillMaxWidth()
+                    .height(140.dp) // Set height yang konsisten dan lebih besar
+                    .fillMaxWidth() // Mengisi lebar penuh
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.anak),
-                    contentDescription = "Ibu dan Anak",
+                    painter = painterResource(id = imageResId), // Gambar berbeda berdasarkan parameter
+                    contentDescription = category,
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop // Memastikan gambar crop dengan proporsional
                 )
             }
 
@@ -274,8 +281,12 @@ fun ArticleCard(title: String, category: String, description: String, navControl
                     maxLines = 2,
                     modifier = Modifier
                         .clickable {
-
-                            navController.navigate(Screen.ArticleDetail.route)
+                            // Navigasi berdasarkan articleId
+                            if (articleId == 1) {
+                                navController.navigate(Screen.ArticleDetail.route) // Artikel 1 navigasi ke ArticleDetailScreen
+                            } else {
+                                navController.navigate(Screen.ArticleDetail2.route) // Artikel 2 navigasi ke ArticleDetailScreen2
+                            }
                         }
                 )
 

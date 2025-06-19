@@ -1,6 +1,8 @@
 package com.example.literalkids.ui.subscription
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -32,6 +35,7 @@ fun SubscriptionUI(navController: NavHostController, viewModel: SubscriptionView
     Log.d("NAV_CHECK", "Masuk ke SubscriptionUI")
     val uiState by viewModel.uiState.collectAsState()
     val gradientBackground = Brush.verticalGradient(colors = listOf(Color(0xFF7BDDFB), Color(0xFFD7A5FF)))
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -155,6 +159,10 @@ fun SubscriptionUI(navController: NavHostController, viewModel: SubscriptionView
                                 modifier = Modifier
                                     .size(18.dp)
                                     .align(Alignment.CenterVertically)
+                                    .clickable {
+                                        viewModel.copyReferralCode(context)
+                                        Toast.makeText(context, "Kode referral disalin!", Toast.LENGTH_SHORT).show()
+                                    }
                             )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
@@ -173,6 +181,7 @@ fun SubscriptionUI(navController: NavHostController, viewModel: SubscriptionView
                 // Kartu Langganan
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     items(uiState.plans) { plan ->
@@ -230,17 +239,21 @@ fun SubscriptionCard(
     Box(
         modifier = Modifier
             .width(180.dp)
+            .height(260.dp) // Tinggi tetap untuk konsistensi
             .border(1.dp, borderColor, RoundedCornerShape(16.dp))
             .background(backgroundColor, RoundedCornerShape(16.dp))
             .padding(16.dp)
             .clickable { onClick() }
     ) {
-        Box {
+        // Konten utama kartu
+        Column(
+            verticalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Bagian atas: Judul, Harga, Savings
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Judul
                 Text(
                     text = title,
                     fontSize = 14.sp,
@@ -265,41 +278,42 @@ fun SubscriptionCard(
                     )
                 }
 
-                // Savings
-                if (savings != null) {
-                    Text(
-                        text = savings,
-                        fontSize = 10.sp,
-                        color = blue900,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                // Savings atau placeholder
+                Text(
+                    text = savings ?: "", // Gunakan string kosong jika savings null
+                    fontSize = 10.sp,
+                    color = blue900,
+                    fontWeight = FontWeight.Bold,
+                    minLines = 1 // Pastikan ruang tetap ada
+                )
 
                 Divider(color = Color(0xFFE0E0E0), thickness = 1.dp)
-
-                // Fitur
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    FeatureItem("Akses Semua Cerita")
-                    FeatureItem("Kuis Interaktif")
-                    FeatureItem("Statistik & Laporan Untuk Orang Tua")
-                }
             }
 
-            // Checklist biru
-            if (checkIcon != null) {
-                Image(
-                    painter = painterResource(id = checkIcon),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .size(20.dp)
-                )
+            // Bagian bawah: Fitur
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.weight(1f) // Mengisi ruang yang tersisa
+            ) {
+                FeatureItem("Akses Semua Cerita")
+                FeatureItem("Kuis Interaktif")
+                FeatureItem("Statistik & Laporan Untuk Orang Tua")
             }
+        }
+
+        // Checklist biru
+        if (checkIcon != null) {
+            Image(
+                painter = painterResource(id = checkIcon),
+                contentDescription = "Selected Plan Indicator",
+                modifier = Modifier
+                    .size(20.dp)
+                    .align(Alignment.TopEnd) // Digunakan dalam BoxScope
+            )
         }
     }
 }
+
 
 @Composable
 fun FeatureItem(text: String) {

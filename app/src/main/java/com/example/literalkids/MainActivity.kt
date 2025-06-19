@@ -11,10 +11,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.navigation.Screen
+import com.example.literalkids.ui.ArticleDetailScreen
+import com.example.literalkids.ui.ParentActivityScreen
 import com.example.literalkids.ui.profile.AvatarSelectionUI
 import com.example.literalkids.ui.bacaBuku.BacaCeritaScreenUI
-import com.example.literalkids.ui.parentScreen.ParentActivityScreen
-import com.example.literalkids.ui.parentScreen.ArticleDetailScreen
 import com.example.literalkids.ui.profile.ChildProfileUI
 import com.example.literalkids.ui.search.GenreSearchUI
 import com.example.literalkids.ui.bacaBuku.HomeBacaCerita
@@ -67,7 +67,6 @@ fun MainNavigation() {
             composable(Screen.OnBoarding1.route) {
                 OnboardingScreen(navController = navController)
             }
-
 
             // Halaman Homepage
             composable(Screen.Homepage.route) {
@@ -144,8 +143,9 @@ fun MainNavigation() {
             }
 
             composable(Screen.ArticleDetail.route) {
-                ArticleDetailScreen()
+                ArticleDetailScreen(navController = navController)
             }
+
         }
     }
 }

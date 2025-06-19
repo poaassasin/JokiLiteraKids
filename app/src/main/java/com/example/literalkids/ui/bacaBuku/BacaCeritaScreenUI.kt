@@ -2,6 +2,7 @@ package com.example.literalkids.ui.bacaBuku
 
 import android.content.Context
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -34,8 +35,17 @@ fun BacaCeritaScreenUI(
 
     // Inisialisasi TTS di UI karena butuh Context
     val tts = remember {
-        TextToSpeech(context) {}.apply {
-            TextToSpeech.setLanguage = Locale("id", "ID")
+        TextToSpeech(context) { status ->
+            if (status != TextToSpeech.SUCCESS) {
+                Log.e("TTS", "Gagal inisialisasi TTS: $status")
+            }
+        }.apply {
+            val result = setLanguage(Locale("id", "ID"))
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Log.e("TTS", "Bahasa Indonesia tidak didukung atau data tidak tersedia")
+            } else {
+                Log.d("TTS", "TTS berhasil diinisialisasi untuk bahasa Indonesia")
+            }
         }
     }
 

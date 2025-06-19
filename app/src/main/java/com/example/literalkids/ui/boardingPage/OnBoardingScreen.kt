@@ -22,15 +22,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
 import com.example.literalkids.ui.OnboardingViewModel
 import com.google.accompanist.pager.*
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
@@ -38,13 +42,14 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
     val currentPage by viewModel.currentPage
     val context = LocalContext.current
     val pagerState = rememberPagerState(initialPage = 0)
+    val coroutineScope = rememberCoroutineScope()
 
     // Animasi slide berdasarkan currentPage
     val animatedPage by animateIntAsState(targetValue = currentPage)
 
     // Sinkronkan pagerState dengan ViewModel
-    LaunchedEffect(currentPage) {
-        pagerState.scrollToPage(currentPage)
+    LaunchedEffect(viewModel.currentPage.value) {
+        pagerState.animateScrollToPage(viewModel.currentPage.value)
     }
 
     Box(
@@ -67,7 +72,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -95,7 +100,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                 )
             }
 
-            Spacer(modifier = Modifier.height(120.dp))
+            Spacer(modifier = Modifier.height(160.dp))
 
             // Dot indicator
             Row(
@@ -103,7 +108,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                repeat(6) { index ->
+                repeat(4) { index ->
                     if (index != 0) Spacer(modifier = Modifier.width(6.dp))
                     Box(
                         modifier = if (index == currentPage) {
@@ -125,7 +130,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
 
             // Konten halaman menggunakan HorizontalPager
             HorizontalPager(
-                count = 6,
+                count = 4,
                 state = pagerState,
                 modifier = Modifier.weight(1f),
                 userScrollEnabled = false // Nonaktifkan swipe
@@ -153,48 +158,20 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF0A5470)
                             )
-                            Spacer(modifier = Modifier.height(48.dp))
-                            OutlinedTextField(
-                                value = viewModel.childName.value,
-                                onValueChange = { viewModel.updateChildName(it) },
-                                placeholder = {
-                                    Text(
-                                        "Masukkan nama di sini",
-                                        color = Color(0xFFB0B0B0),
-                                        fontSize = 14.sp
-                                    )
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(55.dp),
-                                shape = RoundedCornerShape(25.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                                    focusedBorderColor = Color(0xFF64D2FF)
-                                )
-                            )
-                        }
-                        1 -> {
-                            Text(
-                                text = "Nama Pengguna Si Kecil",
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0A5470)
-                            )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Anda selalu dapat mengubahnya nanti.",
+                                text = "Kamu selalu dapat mengubahnya nanti",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = Color(0xFFB0B0B0)
                             )
                             Spacer(modifier = Modifier.height(24.dp))
                             OutlinedTextField(
-                                value = viewModel.childUsername.value,
-                                onValueChange = { viewModel.updateChildUsername(it) },
+                                value = viewModel.childName.value,
+                                onValueChange = { viewModel.updateChildName(it) },
                                 placeholder = {
                                     Text(
-                                        "Buat nama pengguna di sini",
+                                        "Masukkan nama Si Kecil di sini",
                                         color = Color(0xFFB0B0B0),
                                         fontSize = 14.sp
                                     )
@@ -208,15 +185,43 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                                     focusedBorderColor = Color(0xFF64D2FF)
                                 )
                             )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            OutlinedTextField(
+                                value = viewModel.childUsername.value,
+                                onValueChange = { viewModel.updateChildUsername(it) },
+                                placeholder = {
+                                    Text(
+                                        "Masukkan nama pengguna Si Kecil di sini",
+                                        color = Color(0xFFB0B0B0),
+                                        fontSize = 14.sp
+                                    )
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(55.dp),
+                                shape = RoundedCornerShape(25.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    unfocusedBorderColor = Color(0xFFE0E0E0),
+                                    focusedBorderColor = Color(0xFF64D2FF)
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
-                        2 -> {
+                        1 -> {
                             Text(
-                                text = "Siapa Nama Anda?",
+                                text = "Siapa Nama Orang Tua?",
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF0A5470)
                             )
-                            Spacer(modifier = Modifier.height(48.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Kamu selalu dapat mengubahnya nanti",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFFB0B0B0)
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
                             OutlinedTextField(
                                 value = viewModel.parentName.value,
                                 onValueChange = { viewModel.updateParentName(it) },
@@ -236,22 +241,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                                     focusedBorderColor = Color(0xFF64D2FF)
                                 )
                             )
-                        }
-                        3 -> {
-                            Text(
-                                text = "Nama Pengguna Anda",
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0A5470)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Anda selalu dapat mengubahnya nanti.",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color(0xFFB0B0B0)
-                            )
-                            Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                             OutlinedTextField(
                                 value = viewModel.parentUsername.value,
                                 onValueChange = { viewModel.updateParentUsername(it) },
@@ -271,8 +261,9 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                                     focusedBorderColor = Color(0xFF64D2FF)
                                 )
                             )
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
-                        4 -> {
+                        2 -> {
                             Text(
                                 text = "Kode Referral",
                                 fontSize = 24.sp,
@@ -306,8 +297,9 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                                     focusedBorderColor = Color(0xFF64D2FF)
                                 )
                             )
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
-                        5 -> {
+                        3 -> {
                             Text(
                                 text = "Akses Cerita Lebih Banyak",
                                 fontSize = 24.sp,
@@ -457,70 +449,58 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                                     }
                                 }
                             }
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
 
-                    if (page < 5) {
-                        Spacer(modifier = Modifier.height(28.dp))
+                    val isButtonEnabled = when (page) {
+                        0 -> viewModel.childName.value.isNotBlank() && viewModel.childUsername.value.isNotBlank()
+                        1 -> viewModel.parentName.value.isNotBlank() && viewModel.parentUsername.value.isNotBlank()
+                        2 -> viewModel.referralCode.value.isNotBlank()
+                        else -> true
+                    }
+
+                    if (page < 3) {
                         Button(
                             onClick = {
-                                if (viewModel.isNextButtonEnabled()) {
+                                coroutineScope.launch {
                                     viewModel.nextPage()
+                                    pagerState.animateScrollToPage(page + 1)
                                 }
                             },
-                            enabled = viewModel.isNextButtonEnabled(),
+                            enabled = isButtonEnabled,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(50.dp),
                             shape = RoundedCornerShape(25.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (viewModel.isNextButtonEnabled()) Color(0xFF64D2FF) else Color(0xFFD1D1D1),
+                                containerColor = if (isButtonEnabled) Color(0xFF64D2FF) else Color(0xFFD1D1D1),
                                 contentColor = Color.White
                             )
                         ) {
-                            Text("Selanjutnya", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                        }
-                    } else {
-                        Spacer(modifier = Modifier.height(28.dp))
-                        Button(
-                            onClick = {
-                                viewModel.completeOnboarding(context)
-                                navController.navigate(Screen.Homepage.route)
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp),
-                            shape = RoundedCornerShape(25.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF64D2FF),
-                                contentColor = Color.White
-                            )
-                        ) {
-                            Text("Selesai", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                            Text("Selanjutnya", fontSize = 16.sp)
                         }
                     }
 
-                    if (page in 4..5) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Lewati",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color(0xFF5AD8FF),
-                                modifier = Modifier.clickable {
-                                    viewModel.completeOnboarding(context)
-                                    navController.navigate(Screen.Homepage.route)
+                    if (page >= 2) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Lewati",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF5AD8FF),
+                            modifier = Modifier.clickable {
+                                coroutineScope.launch {
+                                    if (page < 3) {
+                                        viewModel.nextPage()
+                                        pagerState.animateScrollToPage(3)
+                                    } else {
+                                        navController.navigate(Screen.Homepage.route)
+                                    }
                                 }
-                            )
-                        }
+                            }
+                        )
                     }
-
-                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }

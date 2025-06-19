@@ -40,7 +40,7 @@ fun CurvedHeader() {
                 width * 0.20f, height * 0.10f,
                 width * 0.75f, height * 0.04f,
                 width, height * 0.3f
-            )
+            )a
             lineTo(width, 0f)
             lineTo(0f, 0f)
             close()

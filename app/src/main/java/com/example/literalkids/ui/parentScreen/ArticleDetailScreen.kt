@@ -1,16 +1,16 @@
-package com.example.literalkids.ui.parentScreen
+package com.example.literalkids.ui
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+//import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,44 +21,37 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.R
 
-class ArticleDetailActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            ArticleDetailScreen()
-        }
-    }
-}
-
 @Composable
-fun ArticleDetailScreen() {
-    // Membungkus seluruh konten dengan scrollable modifier
+fun ArticleDetailScreen(navController: NavController, viewModel: ArticleDetailViewModel = viewModel()) {
+    val comments = viewModel.comments
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(0.dp)  // Menghapus padding di sekitar seluruh konten
-            .verticalScroll(rememberScrollState()) // Menambahkan scroll
+            .verticalScroll(rememberScrollState())
     ) {
         // Header Artikel
-        ArticleHeader()
+        ArticleHeader(navController = navController)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Artikel Content
+        // Artikel Content dengan padding di samping
         ArticleContent()
 
         Spacer(modifier = Modifier.height(24.dp))
 
         // Komentar Section
-        CommentSection()
+        CommentSection(comments = comments)
     }
 }
 
 @Composable
-fun ArticleHeader() {
-    // Header Gradien tanpa padding kiri dan kanan
+fun ArticleHeader(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -67,10 +60,32 @@ fun ArticleHeader() {
                     listOf(Color(0xFF56CCF2), Color(0xFFB36FF1))
                 )
             )
-            .padding(vertical = 24.dp),  // Padding vertikal tetap ada
+            .padding(vertical = 24.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text("Bagaimana Membiasakan Anak Membaca Setiap Hari?", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            // Tombol back di kiri
+            IconButton(
+                onClick = { navController.popBackStack() }, // Navigasi kembali ke ParentActivityScreen
+                modifier = Modifier.padding(end = 8.dp)
+            ) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+            }
+
+            // Teks judul artikel digeser ke kanan sedikit
+            Text(
+                "Bagaimana Membiasakan Anak Membaca Setiap Hari?",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
 
@@ -80,16 +95,16 @@ fun ArticleContent() {
         horizontalAlignment = Alignment.Start,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(0.dp)  // Menghapus padding kiri dan kanan untuk seluruh konten
+            .padding(horizontal = 16.dp)  // Menambahkan padding kiri dan kanan
     ) {
-        // Gambar artikel
+        // Gambar artikel menempel di bawah header gradien
         Image(
             painter = painterResource(id = R.drawable.anak),  // Ganti dengan id gambar artikel sesuai
             contentDescription = "Article Image",
             modifier = Modifier
                 .fillMaxWidth() // Mengisi seluruh lebar
                 .height(180.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(0.dp)) // Menghapus pembulatan agar menempel langsung
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -125,7 +140,7 @@ fun ArticleContent() {
 }
 
 @Composable
-fun CommentSection() {
+fun CommentSection(comments: List<Comment>) {
     Column(modifier = Modifier.fillMaxWidth()) {
         // Judul bagian komentar
         Text(
@@ -136,31 +151,19 @@ fun CommentSection() {
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        // Komentar 1
-        CommentItem(
-            name = "Rina Sumala",
-            time = "3 Hari Yang Lalu",
-            comment = "Wah, bener banget! aku mulai rutin bacain buku buat anakku sebelum tidur, sekarang dia malah yang minta dibacain terus setiap malam. ❤ buku cerita bergambar memang jadi favoritnya!",
-            likes = 45,
-            dislikes = 2
-        )
-
-        // Komentar 2
-        CommentItem(
-            name = "Rina Sumala",
-            time = "3 Hari Yang Lalu",
-            comment = "Sama, bu! anak saya juga paling semangat kalau tokohnya lucu dan bisa ikut suara-suara hewan. jadi bonding banget ya waktu bacain bareng!",
-            likes = 14,
-            dislikes = 0
-        )
+        comments.forEach { comment ->
+            CommentItem(comment = comment)
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Comment input field
+        // Comment input field dengan padding kiri dan kanan
         OutlinedTextField(
             value = "",
             onValueChange = {},
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp), // Padding kiri dan kanan
             label = { Text("Tulis komentar...") },
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -172,15 +175,19 @@ fun CommentSection() {
 }
 
 @Composable
-fun CommentItem(name: String, time: String, comment: String, likes: Int, dislikes: Int) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+fun CommentItem(comment: Comment) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp) // Padding kiri dan kanan
+    ) {
         // Nama dan waktu komentar
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = name,
+                text = comment.name,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF1A4A5A)
@@ -189,7 +196,7 @@ fun CommentItem(name: String, time: String, comment: String, likes: Int, dislike
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(
-                text = time,
+                text = comment.time,
                 fontSize = 12.sp,
                 color = Color.Gray
             )
@@ -197,7 +204,7 @@ fun CommentItem(name: String, time: String, comment: String, likes: Int, dislike
 
         // Teks komentar
         Text(
-            text = comment,
+            text = comment.comment,
             fontSize = 16.sp,
             color = Color(0xFF1A4A5A),
             lineHeight = 20.sp,
@@ -210,12 +217,12 @@ fun CommentItem(name: String, time: String, comment: String, likes: Int, dislike
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "$likes 👍",
+                text = "${comment.likes} 👍",
                 fontSize = 14.sp,
                 color = Color.Gray
             )
             Text(
-                text = "$dislikes 👎",
+                text = "${comment.dislikes} 👎",
                 fontSize = 14.sp,
                 color = Color.Gray
             )
@@ -233,5 +240,6 @@ fun CommentItem(name: String, time: String, comment: String, likes: Int, dislike
 @Preview(showBackground = true)
 @Composable
 fun PreviewArticleDetailScreen() {
-    ArticleDetailScreen()
+    val navController = rememberNavController()
+    ArticleDetailScreen(navController = navController)
 }
