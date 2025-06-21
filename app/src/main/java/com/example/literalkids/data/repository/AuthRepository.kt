@@ -95,10 +95,21 @@ class AuthRepository(
                 AuthResult.Success
             } else {
                 // 3. Jika gagal, parse errornya
+                val responseCode = response.code()
                 val errorBody = response.errorBody()?.string()
-                val errorMessage = Gson().fromJson(errorBody, ApiErrorResponse::class.java).message
-                Log.e("AuthRepository", "Failed to submit onboarding data: $errorMessage")
-                AuthResult.Failure(errorMessage)
+
+                // Log ini akan memberitahu kita kode status dan apa isi mentah dari errornya
+                Log.e("AuthRepository", "API Call Failed! Code: $responseCode, Raw Error Body: $errorBody")
+
+                val serverErrorMessage = try {
+                    // Coba baca pesan error dari JSON
+                    Gson().fromJson(errorBody, ApiErrorResponse::class.java)?.message
+                } catch (e: Exception) {
+                    null
+                }
+                val errorMessage = serverErrorMessage ?: "Gagal menyimpan data. Kode Error: $responseCode"
+                Log.e("AuthRepository", "Processed error message: $errorMessage")
+                return AuthResult.Failure(errorMessage)
             }
         } catch (e: Exception) {
             // 4. Tangani error jaringan

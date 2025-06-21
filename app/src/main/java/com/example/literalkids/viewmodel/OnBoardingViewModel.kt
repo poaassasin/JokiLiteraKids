@@ -36,15 +36,69 @@ class OnboardingViewModel(private val repository: AuthRepository) : ViewModel() 
     private val _submitState = mutableStateOf<OnboardingSubmitState>(OnboardingSubmitState.Idle)
     val submitState: State<OnboardingSubmitState> = _submitState
 
+    private val _childNameError = mutableStateOf<String?>(null)
+    val childNameError: State<String?> = _childNameError
+
+    private val _childUsernameError = mutableStateOf<String?>(null)
+    val childUsernameError: State<String?> = _childUsernameError
+
+    private val _parentNameError = mutableStateOf<String?>(null)
+    val parentNameError: State<String?> = _parentNameError
+
+    private val _parentUsernameError = mutableStateOf<String?>(null)
+    val parentUsernameError: State<String?> = _parentUsernameError
+
     // --- Fungsi untuk update data dari UI (Tidak berubah) ---
-    fun updateChildName(name: String) { _onboardingData.value = _onboardingData.value.copy(childName = name) }
-    fun updateChildUsername(username: String) { _onboardingData.value = _onboardingData.value.copy(childUsername = username) }
-    fun updateParentName(name: String) { _onboardingData.value = _onboardingData.value.copy(parentName = name) }
-    fun updateParentUsername(username: String) { _onboardingData.value = _onboardingData.value.copy(parentUsername = username) }
+    fun updateChildName(name: String) {
+        _onboardingData.value = _onboardingData.value.copy(childName = name)
+        if (name.trim().length < 3 && name.isNotEmpty()) {
+            _childNameError.value = "Nama minimal 3 karakter"
+        } else {
+            _childNameError.value = null // Hapus error jika sudah valid
+        }
+    }
+    fun updateChildUsername(username: String) {
+        _onboardingData.value = _onboardingData.value.copy(childUsername = username)
+        if (username.trim().length < 3 && username.isNotEmpty()) {
+            _childUsernameError.value = "Username minimal 3 karakter"
+        } else {
+            _childUsernameError.value = null
+        }
+    }
+    fun updateParentName(name: String) {
+        _onboardingData.value = _onboardingData.value.copy(parentName = name)
+        if (name.trim().length < 3 && name.isNotEmpty()) {
+            _parentNameError.value = "Nama minimal 3 karakter"
+        } else {
+            _parentNameError.value = null
+        }
+    }
+    fun updateParentUsername(username: String) {
+        _onboardingData.value = _onboardingData.value.copy(parentUsername = username)
+        if (username.trim().length < 3 && username.isNotEmpty()) {
+            _parentUsernameError.value = "Username minimal 3 karakter"
+        } else {
+            _parentUsernameError.value = null
+        }
+    }
     fun updateReferralCode(code: String) { _onboardingData.value = _onboardingData.value.copy(referralCode = code) }
     fun updateSelectedPackage(index: Int) { _onboardingData.value = _onboardingData.value.copy(selectedPackageIndex = index) }
     fun nextPage() { if (_currentPage.value < 3) _currentPage.value++ }
     fun previousPage() { if (_currentPage.value > 0) _currentPage.value-- }
+
+    fun isNextButtonEnabled(): Boolean {
+        // Tombol hanya aktif jika input tidak kosong DAN tidak ada error validasi
+        return when (currentPage.value) {
+            0 -> onboardingData.value.childName.isNotBlank() && childNameError.value == null &&
+                    onboardingData.value.childUsername.isNotBlank() && childUsernameError.value == null
+            1 -> onboardingData.value.parentName.isNotBlank() && parentNameError.value == null &&
+                    onboardingData.value.parentUsername.isNotBlank() && parentUsernameError.value == null
+            // Halaman referral dan paket tidak kita validasi di sini
+            2 -> true
+            3 -> true
+            else -> false
+        }
+    }
 
     // --- Fungsi utama untuk menyelesaikan onboarding (LOGIKANYA BERUBAH TOTAL) ---
     fun completeOnboarding(isSkippingSubscription: Boolean = false) {

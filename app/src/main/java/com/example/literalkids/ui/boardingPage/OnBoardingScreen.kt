@@ -1,6 +1,7 @@
 package com.example.literalkids.ui.boardingPage
 
 import android.util.Log
+import androidx.compose.material3.MaterialTheme
 import android.widget.Toast
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.foundation.Image
@@ -53,6 +54,10 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
     val onboardingState by viewModel.onboardingData
     val pagerState = rememberPagerState(initialPage = 0)
     val coroutineScope = rememberCoroutineScope()
+    val childNameError by viewModel.childNameError
+    val childUsernameError by viewModel.childUsernameError
+    val parentNameError by viewModel.parentNameError
+    val parentUsernameError by viewModel.parentUsernameError
 
     // Animasi slide berdasarkan currentPage
     val animatedPage by animateIntAsState(targetValue = currentPage)
@@ -203,13 +208,19 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                                     )
                                 },
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(55.dp),
+                                    .fillMaxWidth(),
                                 shape = RoundedCornerShape(25.dp),
+                                singleLine = true,
                                 colors = OutlinedTextFieldDefaults.colors(
                                     unfocusedBorderColor = Color(0xFFE0E0E0),
                                     focusedBorderColor = Color(0xFF64D2FF)
-                                )
+                                ),
+                                isError = childNameError != null,
+                                supportingText = {
+                                    if (childNameError != null) {
+                                        Text(text = childNameError!!, color = MaterialTheme.colorScheme.error)
+                                    }
+                                }
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             OutlinedTextField(
@@ -223,13 +234,19 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                                     )
                                 },
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(55.dp),
+                                    .fillMaxWidth(),
                                 shape = RoundedCornerShape(25.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     unfocusedBorderColor = Color(0xFFE0E0E0),
                                     focusedBorderColor = Color(0xFF64D2FF)
-                                )
+                                ),
+                                singleLine = true,
+                                isError = childUsernameError != null,
+                                supportingText = {
+                                    if (childUsernameError != null) {
+                                        Text(text = childUsernameError!!, color = MaterialTheme.colorScheme.error)
+                                    }
+                                }
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                         }
@@ -259,13 +276,19 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                                     )
                                 },
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(55.dp),
+                                    .fillMaxWidth(),
                                 shape = RoundedCornerShape(25.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     unfocusedBorderColor = Color(0xFFE0E0E0),
                                     focusedBorderColor = Color(0xFF64D2FF)
-                                )
+                                ),
+                                singleLine = true,
+                                isError = parentNameError != null,
+                                supportingText = {
+                                    if (parentNameError != null) {
+                                        Text(text = parentNameError!!, color = MaterialTheme.colorScheme.error)
+                                    }
+                                }
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             OutlinedTextField(
@@ -279,13 +302,19 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                                     )
                                 },
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(55.dp),
+                                    .fillMaxWidth(),
                                 shape = RoundedCornerShape(25.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     unfocusedBorderColor = Color(0xFFE0E0E0),
                                     focusedBorderColor = Color(0xFF64D2FF)
-                                )
+                                ),
+                                singleLine = true,
+                                isError = parentUsernameError != null,
+                                supportingText = {
+                                    if (parentUsernameError != null) {
+                                        Text(text = parentUsernameError!!, color = MaterialTheme.colorScheme.error)
+                                    }
+                                }
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                         }
@@ -488,12 +517,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                         }
                     }
 
-                    val isButtonEnabled = when (page) {
-                        0 -> onboardingState.childName.isNotBlank() && onboardingState.childUsername.isNotBlank()
-                        1 -> onboardingState.parentName.isNotBlank() && onboardingState.parentUsername.isNotBlank()
-                        2 -> onboardingState.referralCode.isNotBlank()
-                        else -> true
-                    }
+                    val isButtonEnabled = viewModel.isNextButtonEnabled()
 
                     if (page < 3) {
                         Button(
