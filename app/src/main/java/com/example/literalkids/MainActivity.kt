@@ -13,7 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.navigation.Screen
 import com.example.literalkids.ui.ArticleDetailScreen
 import com.example.literalkids.ui.ParentActivityScreen
-import com.example.literalkids.ui.profile.AvatarSelectionUI
+//import com.example.literalkids.ui.profile.AvatarSelectionUI
 import com.example.literalkids.ui.bacaBuku.BacaCeritaScreenUI
 import com.example.literalkids.ui.profile.ChildProfileUI
 import com.example.literalkids.ui.search.GenreSearchUI
@@ -32,6 +32,20 @@ import com.example.literalkids.ui.homepage.HomepageUI
 import com.example.literalkids.ui.boardingPage.OnboardingScreen
 import com.example.literalkids.ui.theme.LiteralkidsTheme
 import com.example.literalkids.viewmodel.ProfileViewModel
+import com.example.literalkids.data.local.TokenManager // <-- Tambahkan Import
+import com.example.literalkids.data.network.ApiClient // <-- Tambahkan Import
+import com.example.literalkids.data.repository.AuthRepository // <-- Tambahkan Import
+import com.example.literalkids.viewmodel.LoginViewModel // <-- Tambahkan Import
+import com.example.literalkids.viewmodel.LoginViewModelFactory // <-- Tambahkan Import
+import androidx.compose.ui.platform.LocalContext // <-- Tambahkan Import
+import com.example.literalkids.data.repository.StoryRepository
+import com.example.literalkids.viewmodel.HomepageViewModel
+import com.example.literalkids.viewmodel.HomepageViewModelFactory
+import com.example.literalkids.viewmodel.OnboardingViewModel
+import com.example.literalkids.viewmodel.OnboardingViewModelFactory
+import com.example.literalkids.viewmodel.ProfileViewModelFactory
+import com.example.literalkids.viewmodel.RegisterViewModel
+import com.example.literalkids.viewmodel.RegisterViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,32 +59,50 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainNavigation() {
     val navController = rememberNavController()
-    val profileViewModel: ProfileViewModel = viewModel()
-    val uiState by profileViewModel.uiState.collectAsState()
 
-    LiteralkidsTheme(darkTheme = uiState.isDarkTheme) {
+    val context = LocalContext.current
+
+    // 2. Buat semua objek yang dibutuhkan, cukup sekali di sini
+    val apiService = ApiClient.getApiService(context) // Sesuaikan jika ApiClient Anda butuh context
+    val tokenManager = TokenManager(context)
+    val authRepository = AuthRepository(apiService, tokenManager)
+
+    val storyRepository = StoryRepository(apiService)
+    val homepageViewModelFactory = HomepageViewModelFactory(storyRepository)
+
+    // 3. Buat Factory yang akan digunakan untuk membuat ViewModel
+    val loginViewModelFactory = LoginViewModelFactory(authRepository)
+    val registerViewModelFactory = RegisterViewModelFactory(authRepository)
+    val onboardingViewModelFactory = OnboardingViewModelFactory(authRepository)
+    val profileViewModelFactory = ProfileViewModelFactory(authRepository)
+
+    LiteralkidsTheme(darkTheme = false) {
         NavHost(
             navController = navController,
             startDestination = Screen.Login.route
         ) {
             // Halaman Login
             composable(Screen.Login.route) {
-                LoginUI(navController = navController)
+                val loginViewModel: LoginViewModel = viewModel(factory = loginViewModelFactory)
+                LoginUI(navController = navController, viewModel = loginViewModel)
             }
 
             // Halaman Register
             composable(Screen.Register.route) {
-                RegisterUI(navController = navController)
+                val registerViewModel: RegisterViewModel = viewModel(factory = registerViewModelFactory)
+                RegisterUI(navController = navController, viewModel = registerViewModel)
             }
 
             // Halaman OnBoarding1
             composable(Screen.OnBoarding1.route) {
-                OnboardingScreen(navController = navController)
+                val onboardingViewModel: OnboardingViewModel = viewModel(factory = onboardingViewModelFactory)
+                OnboardingScreen(navController = navController, viewModel = onboardingViewModel)
             }
 
             // Halaman Homepage
             composable(Screen.Homepage.route) {
-                HomepageUI(navController = navController)
+                val homepageViewModel: HomepageViewModel = viewModel(factory = homepageViewModelFactory)
+                HomepageUI(navController = navController, viewModel = homepageViewModel)
             }
 
             // Halaman Subscription
@@ -95,7 +127,8 @@ fun MainNavigation() {
 
             // Halaman Profile
             composable(Screen.Profile.route) {
-                ProfileUI(navController = navController)
+                val profileViewModel: ProfileViewModel = viewModel(factory = profileViewModelFactory)
+                ProfileUI(navController = navController, viewModel = profileViewModel)
             }
 
             // Halaman Parent Profile
@@ -109,9 +142,9 @@ fun MainNavigation() {
             }
 
             // Halaman Avatar Selection
-            composable(Screen.AvatarSelection.route) {
-                AvatarSelectionUI(navController = navController)
-            }
+//            composable(Screen.AvatarSelection.route) {
+//                AvatarSelectionUI(navController = navController)
+//            }
 
             // Halaman Leaderboard
             composable(Screen.Leaderboard.route) {

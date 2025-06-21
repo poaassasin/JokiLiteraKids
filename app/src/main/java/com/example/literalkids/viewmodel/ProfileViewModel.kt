@@ -3,6 +3,7 @@ package com.example.literalkids.viewmodel
 import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,10 +12,25 @@ import com.example.literalkids.R
 import com.example.literalkids.data.model.AvatarOption
 import com.example.literalkids.data.model.ProfileUiState
 import com.example.literalkids.data.model.UserData
+import com.example.literalkids.data.repository.AuthRepository
+import kotlinx.coroutines.flow.asStateFlow
 
-class ProfileViewModel : ViewModel() {
+class ProfileViewModel(private val authRepository: AuthRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState
+
+    private val _loggedOutState = MutableStateFlow(false)
+    val loggedOutState: StateFlow<Boolean> = _loggedOutState.asStateFlow()
+
+    // Fungsi yang akan dipanggil oleh tombol "Keluar" di UI
+    fun logout() {
+        viewModelScope.launch {
+            // Panggil fungsi logout di repository
+            authRepository.logout()
+            // Setelah selesai, ubah state menjadi true
+            _loggedOutState.value = true
+        }
+    }
 
     init {
         fetchProfileData()
@@ -158,5 +174,15 @@ class ProfileViewModel : ViewModel() {
             birthDate = birthDate
         )
         _uiState.value = _uiState.value.copy(parentData = newParentData)
+    }
+}
+
+class ProfileViewModelFactory(private val authRepository: AuthRepository) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return ProfileViewModel(authRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

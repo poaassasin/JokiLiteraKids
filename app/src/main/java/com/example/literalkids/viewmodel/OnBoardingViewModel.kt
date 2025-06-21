@@ -1,98 +1,94 @@
-package com.example.literalkids.ui
+package com.example.literalkids.viewmodel // atau package ui.auth Anda
 
-import android.content.Context
-import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.example.literalkids.data.model.OnboardingModel
+import com.example.literalkids.data.repository.AuthRepository
+import com.example.literalkids.data.repository.AuthResult
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
-class OnboardingViewModel : ViewModel() {
-    // State untuk halaman aktif
+// State untuk proses submit data ke API
+sealed class OnboardingSubmitState {
+    object Idle : OnboardingSubmitState()
+    object Loading : OnboardingSubmitState()
+    object Success : OnboardingSubmitState()
+    data class Error(val message: String) : OnboardingSubmitState()
+}
+
+// ViewModel sekarang butuh Repository sebagai "bahan"-nya
+class OnboardingViewModel(private val repository: AuthRepository) : ViewModel() {
+
+    // State untuk halaman aktif (pagination) -> TIDAK BERUBAH
     private val _currentPage = mutableStateOf(0)
     val currentPage: State<Int> = _currentPage
 
-    // State untuk data onboarding
+    // State untuk menampung data yang diisi pengguna -> TIDAK BERUBAH
     private val _onboardingData = mutableStateOf(OnboardingModel())
     val onboardingData: State<OnboardingModel> = _onboardingData
 
-    // Fungsi untuk mengubah input
-    fun updateChildName(name: String) {
-        _onboardingData.value = _onboardingData.value.copy(childName = name)
-    }
+    // State BARU untuk proses submit ke API
+    private val _submitState = mutableStateOf<OnboardingSubmitState>(OnboardingSubmitState.Idle)
+    val submitState: State<OnboardingSubmitState> = _submitState
 
-    fun updateChildUsername(username: String) {
-        _onboardingData.value = _onboardingData.value.copy(childUsername = username)
-    }
+    // --- Fungsi untuk update data dari UI (Tidak berubah) ---
+    fun updateChildName(name: String) { _onboardingData.value = _onboardingData.value.copy(childName = name) }
+    fun updateChildUsername(username: String) { _onboardingData.value = _onboardingData.value.copy(childUsername = username) }
+    fun updateParentName(name: String) { _onboardingData.value = _onboardingData.value.copy(parentName = name) }
+    fun updateParentUsername(username: String) { _onboardingData.value = _onboardingData.value.copy(parentUsername = username) }
+    fun updateReferralCode(code: String) { _onboardingData.value = _onboardingData.value.copy(referralCode = code) }
+    fun updateSelectedPackage(index: Int) { _onboardingData.value = _onboardingData.value.copy(selectedPackageIndex = index) }
+    fun nextPage() { if (_currentPage.value < 3) _currentPage.value++ }
+    fun previousPage() { if (_currentPage.value > 0) _currentPage.value-- }
 
-    fun updateParentName(name: String) {
-        _onboardingData.value = _onboardingData.value.copy(parentName = name)
-    }
+    // --- Fungsi utama untuk menyelesaikan onboarding (LOGIKANYA BERUBAH TOTAL) ---
+    fun completeOnboarding(isSkippingSubscription: Boolean = false) {
+        if (_submitState.value is OnboardingSubmitState.Loading) return
 
-    fun updateParentUsername(username: String) {
-        _onboardingData.value = _onboardingData.value.copy(parentUsername = username)
-    }
+        viewModelScope.launch {
+            _submitState.value = OnboardingSubmitState.Loading
 
-    fun updateReferralCode(code: String) {
-        _onboardingData.value = _onboardingData.value.copy(referralCode = code)
-    }
+            // Buat salinan data yang akan dikirim
+            var dataToSend = _onboardingData.value
 
-    // Fungsi untuk mengubah paket yang dipilih
-    fun updateSelectedPackage(index: Int) {
-        _onboardingData.value = _onboardingData.value.copy(selectedPackageIndex = index)
-        Log.d("Onboarding", "Paket dipilih: $index")
-    }
+            // Jika pengguna melewati halaman subscription, atur index paket ke nilai khusus
+            // Misalnya -1 untuk menandakan tidak ada paket yang dipilih
+            if (isSkippingSubscription) {
+                dataToSend = dataToSend.copy(selectedPackageIndex = -1) // atau 0 sesuai logika bisnis Anda
+            }
 
-    // Fungsi untuk navigasi halaman
-    fun nextPage(): Boolean {
-        return if (_currentPage.value < 5) {
-            _currentPage.value += 1
-            Log.d("Onboarding", "Pindah ke halaman ${_currentPage.value}")
-            true
-        } else {
-            false
+            // 2. Panggil repository untuk mengirim data yang sudah terkumpul
+            when (val result = repository.submitOnboarding(dataToSend)) {
+                is AuthResult.Success -> {
+                    // 3a. Jika sukses, ubah state menjadi Success
+                    _submitState.value = OnboardingSubmitState.Success
+                }
+                is AuthResult.Failure -> {
+                    // 3b. Jika gagal, ubah state menjadi Error dan bawa pesan errornya
+                    _submitState.value = OnboardingSubmitState.Error(result.errorMessage)
+                }
+                is AuthResult.NetworkError -> {
+                    // 3c. Jika gagal karena jaringan
+                    _submitState.value = OnboardingSubmitState.Error("Periksa koneksi internet Anda.")
+                }
+
+            }
         }
     }
+}
 
-    fun previousPage() {
-        if (_currentPage.value > 0) {
-            _currentPage.value -= 1
-            Log.d("Onboarding", "Kembali ke halaman ${_currentPage.value}")
+// Buat Factory-nya agar bisa di-inject dari MainActivity
+class OnboardingViewModelFactory(private val repository: AuthRepository) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(OnboardingViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return OnboardingViewModel(repository) as T
         }
-    }
-
-    // Validasi input untuk tombol "Selanjutnya"
-    fun isNextButtonEnabled(): Boolean {
-        return when (_currentPage.value) {
-            0 -> _onboardingData.value.childName.isNotBlank()
-            1 -> _onboardingData.value.childUsername.isNotBlank()
-            2 -> _onboardingData.value.parentName.isNotBlank()
-            3 -> _onboardingData.value.parentUsername.isNotBlank()
-            4 -> _onboardingData.value.referralCode.isNotBlank()
-            5 -> true // Halaman langganan tidak perlu input
-            else -> false
-        }
-    }
-
-    // Logika penyelesaian onboarding
-    fun completeOnboarding(context: Context) {
-        val sharedPref = context.getSharedPreferences("OnboardingPrefs", Context.MODE_PRIVATE)
-        with(sharedPref.edit()) {
-            putString("childName", _onboardingData.value.childName)
-            putString("childUsername", _onboardingData.value.childUsername)
-            putString("parentName", _onboardingData.value.parentName)
-            putString("parentUsername", _onboardingData.value.parentUsername)
-            putString("referralCode", _onboardingData.value.referralCode)
-            putInt("selectedPackageIndex", _onboardingData.value.selectedPackageIndex)
-            putBoolean("onboardingCompleted", true)
-            apply()
-        }
-        Log.d("Onboarding", "Onboarding selesai: " +
-                "ChildName=${_onboardingData.value.childName}, " +
-                "ChildUsername=${_onboardingData.value.childUsername}, " +
-                "ParentName=${_onboardingData.value.parentName}, " +
-                "ParentUsername=${_onboardingData.value.parentUsername}, " +
-                "ReferralCode=${_onboardingData.value.referralCode}, " +
-                "SelectedPackage=${_onboardingData.value.selectedPackageIndex}")
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

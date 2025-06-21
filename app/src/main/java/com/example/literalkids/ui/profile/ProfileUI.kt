@@ -45,6 +45,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,25 +61,45 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.R
+import com.example.literalkids.data.local.TokenManager
+import com.example.literalkids.data.network.ApiClient
+import com.example.literalkids.data.repository.AuthRepository
 import com.example.literalkids.navigation.Screen
 import com.example.literalkids.ui.navbar.BottomNavigation
+import com.example.literalkids.ui.theme.LiteralkidsTheme
 import com.example.literalkids.viewmodel.ProfileViewModel
 import com.example.literalkids.viewmodel.SubscriptionViewModel
 
 @Composable
 fun ProfileUI(
     navController: NavController,
+    viewModel: ProfileViewModel
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-    val profileViewModel: ProfileViewModel = viewModel()
+
     val subscriptionViewModel: SubscriptionViewModel = viewModel()
-    val profileUiState by profileViewModel.uiState.collectAsState()
+    val profileUiState by viewModel.uiState.collectAsState()
+    val hasLoggedOut by viewModel.loggedOutState.collectAsState()
+
+    LaunchedEffect(hasLoggedOut) {
+        if (hasLoggedOut) {
+            // Arahkan ke halaman login dan bersihkan semua histori
+            navController.navigate(Screen.Login.route) {
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = true
+                }
+            }
+        }
+    }
+
     val subscriptionUiState by subscriptionViewModel.uiState.collectAsState()
 
     var isDarkMode by remember { mutableStateOf(false) }
@@ -367,7 +388,7 @@ fun ProfileUI(
                 title = "Keluar",
                 subtitle = "Untuk Keluar Akun",
                 endIcon = Icons.Default.ChevronRight,
-                onClick = { /* Logika logout di sini */ }
+                onClick = { viewModel.logout() }
             )
 
             Spacer(modifier = Modifier.height(80.dp))
@@ -399,6 +420,26 @@ fun ProfileUI(
         }
     }
 }
+
+@Preview
+@Composable
+fun ProfileUIPreview() {
+    // Fake NavController for preview purposes
+    val navController = rememberNavController()
+
+    val fakeAuthRepository = AuthRepository(
+        apiService = ApiClient.getApiService(LocalContext.current), // Ini hanya untuk memenuhi parameter
+        tokenManager = TokenManager(LocalContext.current)
+    )
+    val fakeProfileViewModel = ProfileViewModel(authRepository = fakeAuthRepository)
+    LiteralkidsTheme(darkTheme = false) { // Bungkus dengan Theme Anda agar tampilannya konsisten
+        ProfileUI(
+            navController = navController,
+            viewModel = fakeProfileViewModel
+        )
+    }
+}
+
 
 @Composable
 fun UserProfileCard(
@@ -475,6 +516,17 @@ fun UserProfileCard(
     }
 }
 
+@Preview
+@Composable
+fun UserProfileCardPreview() {
+    UserProfileCard(
+        name = "John Doe",
+        username = "@johndoe",
+        avatarUrl = R.drawable.default_avatar,
+        onEditClick = {}
+    )
+}
+
 fun showUnavailablePageToast(context: Context) {
     Toast.makeText(context, "Halaman belum tersedia", Toast.LENGTH_SHORT).show()
 }
@@ -531,6 +583,25 @@ fun ProfileMenuItem(
     }
 }
 
+@Preview
+@Composable
+fun ProfileMenuItemPreview() {
+    ProfileMenuItem(
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.Person,
+                contentDescription = "Tentang Akun",
+                tint = Color(0xFF5DCCF8),
+                modifier = Modifier.size(24.dp)
+            )
+        },
+        title = "Tentang Akun Saya",
+        subtitle = "Informasi Dasar Seputar Akun Pengguna",
+        endIcon = Icons.Default.ChevronRight,
+        onClick = {}
+    )
+}
+
 @Composable
 fun ProfileMenuToggleItem(
     icon: @Composable () -> Unit,
@@ -585,6 +656,25 @@ fun ProfileMenuToggleItem(
             )
         )
     }
+}
+
+@Preview
+@Composable
+fun ProfileMenuToggleItemPreview() {
+    ProfileMenuToggleItem(
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.DarkMode,
+                contentDescription = "Tampilan",
+                tint = Color(0xFF5DCCF8),
+                modifier = Modifier.size(24.dp)
+            )
+        },
+        title = "Tampilan",
+        subtitle = "Ubah Tampilan Menjadi Dark Mode",
+        isChecked = false,
+        onCheckedChange = {}
+    )
 }
 
 @Composable
@@ -649,5 +739,15 @@ fun LanguageSelectionDialog(
         containerColor = MaterialTheme.colorScheme.surface,
         titleContentColor = MaterialTheme.colorScheme.onSurface,
         textContentColor = MaterialTheme.colorScheme.onSurface
+    )
+}
+
+@Preview
+@Composable
+fun LanguageSelectionDialogPreview() {
+    LanguageSelectionDialog(
+        selectedLanguage = "Indonesia",
+        onLanguageSelected = {},
+        onDismiss = {}
     )
 }

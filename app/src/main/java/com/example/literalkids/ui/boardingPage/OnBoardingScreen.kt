@@ -1,11 +1,13 @@
 package com.example.literalkids.ui.boardingPage
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,21 +33,45 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.R
 import com.example.literalkids.navigation.Screen
-import com.example.literalkids.ui.OnboardingViewModel
 import com.google.accompanist.pager.*
 import androidx.compose.runtime.rememberCoroutineScope
+import com.example.literalkids.data.local.TokenManager
+import com.example.literalkids.data.network.ApiService
+import com.example.literalkids.data.repository.AuthRepository
+import com.example.literalkids.viewmodel.OnboardingSubmitState
+import com.example.literalkids.viewmodel.OnboardingViewModel
+import com.example.literalkids.viewmodel.RegisterViewModel
 import kotlinx.coroutines.launch
+import retrofit2.Retrofit
 
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewModel = viewModel()) {
+fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewModel) {
+    val submitState by viewModel.submitState
     val currentPage by viewModel.currentPage
     val context = LocalContext.current
+    val onboardingState by viewModel.onboardingData
     val pagerState = rememberPagerState(initialPage = 0)
     val coroutineScope = rememberCoroutineScope()
 
     // Animasi slide berdasarkan currentPage
     val animatedPage by animateIntAsState(targetValue = currentPage)
+
+    LaunchedEffect(submitState) {
+        when(val state = submitState) {
+            is OnboardingSubmitState.Success -> {
+                Toast.makeText(context, "Profil berhasil disimpan!", Toast.LENGTH_SHORT).show()
+                // Navigasi ke Homepage jika submit API berhasil
+                navController.navigate(Screen.Homepage.route) {
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                }
+            }
+            is OnboardingSubmitState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
+            }
+            else -> { /* Tidak melakukan apa-apa untuk Idle dan Loading */ }
+        }
+    }
 
     // Sinkronkan pagerState dengan ViewModel
     LaunchedEffect(viewModel.currentPage.value) {
@@ -167,7 +193,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                             )
                             Spacer(modifier = Modifier.height(24.dp))
                             OutlinedTextField(
-                                value = viewModel.childName.value,
+                                value = onboardingState.childName,
                                 onValueChange = { viewModel.updateChildName(it) },
                                 placeholder = {
                                     Text(
@@ -187,7 +213,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             OutlinedTextField(
-                                value = viewModel.childUsername.value,
+                                value = onboardingState.childUsername,
                                 onValueChange = { viewModel.updateChildUsername(it) },
                                 placeholder = {
                                     Text(
@@ -223,7 +249,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                             )
                             Spacer(modifier = Modifier.height(24.dp))
                             OutlinedTextField(
-                                value = viewModel.parentName.value,
+                                value = onboardingState.parentName,
                                 onValueChange = { viewModel.updateParentName(it) },
                                 placeholder = {
                                     Text(
@@ -243,7 +269,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             OutlinedTextField(
-                                value = viewModel.parentUsername.value,
+                                value = onboardingState.parentUsername,
                                 onValueChange = { viewModel.updateParentUsername(it) },
                                 placeholder = {
                                     Text(
@@ -279,7 +305,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                             )
                             Spacer(modifier = Modifier.height(24.dp))
                             OutlinedTextField(
-                                value = viewModel.referralCode.value,
+                                value = onboardingState.referralCode,
                                 onValueChange = { viewModel.updateReferralCode(it) },
                                 placeholder = {
                                     Text(
@@ -336,7 +362,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 packages.forEachIndexed { index, pkg ->
-                                    val isSelected = index == viewModel.selectedPackageIndex.value
+                                    val isSelected = index == onboardingState.selectedPackageIndex
                                     val scale = if (isSelected) 1f else 0.8f
                                     val alpha = if (isSelected) 1f else 0.6f
 
@@ -425,7 +451,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
 
                                                 if (isSelected) {
                                                     Button(
-                                                        onClick = { Log.d("Paket", "Beli ${pkg.first}") },
+                                                        onClick = { viewModel.completeOnboarding(isSkippingSubscription = false) },
                                                         shape = RoundedCornerShape(50),
                                                         colors = ButtonDefaults.buttonColors(
                                                             containerColor = Color(0xFF64D2FF),
@@ -433,13 +459,22 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                                                         ),
                                                         modifier = Modifier
                                                             .fillMaxWidth()
-                                                            .height(40.dp)
+                                                            .height(40.dp),
+                                                        enabled = submitState !is OnboardingSubmitState.Loading
                                                     ) {
-                                                        Text(
-                                                            text = "Beli",
-                                                            fontWeight = FontWeight.Bold,
-                                                            fontSize = 14.sp
-                                                        )
+                                                        if (submitState is OnboardingSubmitState.Loading) {
+                                                            CircularProgressIndicator(
+                                                                modifier = Modifier.size(22.dp),
+                                                                color = Color.White,
+                                                                strokeWidth = 2.dp
+                                                            )
+                                                        } else {
+                                                            Text(
+                                                                text = "Beli",
+                                                                fontWeight = FontWeight.Bold,
+                                                                fontSize = 14.sp
+                                                            )
+                                                        }
                                                     }
                                                 } else {
                                                     Spacer(modifier = Modifier.height(40.dp))
@@ -454,9 +489,9 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                     }
 
                     val isButtonEnabled = when (page) {
-                        0 -> viewModel.childName.value.isNotBlank() && viewModel.childUsername.value.isNotBlank()
-                        1 -> viewModel.parentName.value.isNotBlank() && viewModel.parentUsername.value.isNotBlank()
-                        2 -> viewModel.referralCode.value.isNotBlank()
+                        0 -> onboardingState.childName.isNotBlank() && onboardingState.childUsername.isNotBlank()
+                        1 -> onboardingState.parentName.isNotBlank() && onboardingState.parentUsername.isNotBlank()
+                        2 -> onboardingState.referralCode.isNotBlank()
                         else -> true
                     }
 
@@ -490,14 +525,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                             fontWeight = FontWeight.Medium,
                             color = Color(0xFF5AD8FF),
                             modifier = Modifier.clickable {
-                                coroutineScope.launch {
-                                    if (page < 3) {
-                                        viewModel.nextPage()
-                                        pagerState.animateScrollToPage(3)
-                                    } else {
-                                        navController.navigate(Screen.Homepage.route)
-                                    }
-                                }
+                                viewModel.completeOnboarding(isSkippingSubscription = true)
                             }
                         )
                     }
@@ -505,4 +533,19 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun OnboardingScreenPreview() {
+    val navController = rememberNavController()
+    val context = LocalContext.current
+    val apiService = Retrofit.Builder()
+        .baseUrl("https://literakids-api.up.railway.app/api/onboarding/") // Replace with a valid base URL
+        .build()
+        .create(ApiService::class.java)
+    val tokenManager = TokenManager(context)
+    val authRepository = AuthRepository(apiService, tokenManager)
+    val viewModel = OnboardingViewModel(authRepository)
+    OnboardingScreen(navController = navController, viewModel = viewModel)
 }

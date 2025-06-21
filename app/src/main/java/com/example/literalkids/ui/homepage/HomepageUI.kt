@@ -24,7 +24,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.literalkids.ui.navbar.BottomNavigation
 
 @Composable
-fun HomepageUI(navController: NavController, viewModel: HomepageViewModel = viewModel()) {
+fun HomepageUI(
+    navController: NavController,
+    viewModel: HomepageViewModel
+) {
     val uiState by viewModel.uiState.collectAsState()
     val primaryTextColor = Color(0xFF0A5470)
     val gradientColors = Brush.horizontalGradient(listOf(Color(0xFF5AD8FF), Color(0xFFDE99FF)))
@@ -67,7 +70,7 @@ fun HomepageUI(navController: NavController, viewModel: HomepageViewModel = view
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    "Halo, ${uiState.user?.name ?: "User"}!",
+                                    "Halo, ${uiState.user?.name ?: "Pengguna"}!",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White

@@ -87,6 +87,15 @@ dependencies {
     implementation ("com.google.dagger:hilt-android:2.51.1")
     kapt ("com.google.dagger:hilt-compiler:2.51.1")
 
+    // Untuk koneksi ke API (Retrofit)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+
+// Untuk mengubah JSON menjadi objek Kotlin (Gson Converter)
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+// (Sangat direkomendasikan) Untuk melihat log request/response API saat debugging
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -1,10 +1,15 @@
-package com.example.literalkids.data.repo
+package com.example.literalkids.data.repository
 
 import com.example.literalkids.data.model.Story
-import com.example.literalkids.data.model.User
 import com.example.literalkids.R
+import com.example.literalkids.data.model.HomeUser
+import android.util.Log
+import com.example.literalkids.data.model.ApiErrorResponse
+import com.example.literalkids.data.network.ApiService
+import com.example.literalkids.data.repository.DataResult // Pastikan import ini benar
+import com.google.gson.Gson
 
-class StoryRepository {
+class StoryRepository(private val apiService: ApiService) {
     fun getStories(): List<Story> {
         return listOf(
             Story(1, "Si Kancil dan Buaya", R.drawable.kancil_buaya, 0.8f, "Fabel", "4,2 Ribu Dibaca"),
@@ -18,8 +23,39 @@ class StoryRepository {
         )
     }
 
-    fun getUser(): User {
-        return User("Levi Annora", "@leviannora", 7, 0.68f)
+    suspend fun getHomepageUser(userId: Long): DataResult<HomeUser> {
+        try {
+            // Melakukan panggilan API yang sebenarnya melalui ApiService
+            val response = apiService.getHomepageUser(userId)
+
+            // Cek jika respon dari server sukses (HTTP code 2xx)
+            if (response.isSuccessful) {
+                // Ambil '.user' dari body karena respon JSON-nya di-wrap: { "user": {...} }
+                val user = response.body()?.user
+                if (user != null) {
+                    // Jika sukses dan data ada, kembalikan data pengguna
+                    return DataResult.Success(user)
+                } else {
+                    // Handle kasus aneh di mana respon sukses tapi body-nya kosong
+                    return DataResult.Failure("Data pengguna tidak ditemukan dalam respon.")
+                }
+            } else {
+                // Handle jika server merespon dengan error (HTTP code 4xx atau 5xx)
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = try {
+                    // Coba parse pesan error dari JSON server
+                    Gson().fromJson(errorBody, ApiErrorResponse::class.java).message
+                } catch (e: Exception) {
+                    // Pesan fallback jika parsing JSON error gagal
+                    "Gagal mengambil data pengguna"
+                }
+                return DataResult.Failure(errorMessage)
+            }
+        } catch (e: Exception) {
+            // Handle jika terjadi error jaringan (tidak ada internet, timeout, dll.)
+            Log.e("StoryRepository", "Error Jaringan saat mengambil data user: ${e.message}", e)
+            return DataResult.NetworkError
+        }
     }
 
     fun getBannerImages(): List<Int> {

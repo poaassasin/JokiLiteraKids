@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.literalkids.R
+import com.example.literalkids.data.model.DetailArticleModel
 
 @Composable
 fun ArticleDetailScreen(navController: NavController, viewModel: ArticleDetailViewModel = viewModel()) {
@@ -140,7 +141,7 @@ fun ArticleContent() {
 }
 
 @Composable
-fun CommentSection(comments: List<Comment>) {
+fun CommentSection(comments: List<DetailArticleModel>) {
     Column(modifier = Modifier.fillMaxWidth()) {
         // Judul bagian komentar
         Text(
@@ -175,7 +176,7 @@ fun CommentSection(comments: List<Comment>) {
 }
 
 @Composable
-fun CommentItem(comment: Comment) {
+fun CommentItem(comment: DetailArticleModel) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
