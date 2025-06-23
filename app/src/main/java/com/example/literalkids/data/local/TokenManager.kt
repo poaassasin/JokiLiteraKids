@@ -10,13 +10,26 @@ class TokenManager(context: Context) {
 
     companion object {
         private const val USER_TOKEN = "user_token"
+        private const val USER_ID = "user_id"
     }
 
     // Fungsi untuk menyimpan token
     fun saveToken(token: String) {
         val editor = prefs.edit()
         editor.putString(USER_TOKEN, token)
+        editor.remove(USER_ID)
         editor.apply()
+    }
+
+    fun saveUserId(id: Long) {
+        val editor = prefs.edit()
+        editor.putLong(USER_ID, id)
+        editor.apply()
+    }
+
+    fun getUserId(): Long? {
+        val id = prefs.getLong(USER_ID, -1L)
+        return if (id == -1L) null else id
     }
 
     // Fungsi untuk membaca token

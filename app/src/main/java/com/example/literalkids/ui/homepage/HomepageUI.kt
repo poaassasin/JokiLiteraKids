@@ -11,17 +11,29 @@ import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import com.example.literalkids.R
 import com.google.accompanist.pager.*
 import kotlinx.coroutines.delay
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.literalkids.data.local.TokenManager
+import com.example.literalkids.data.local.UserDao
+import com.example.literalkids.data.network.ApiService
+import com.example.literalkids.data.repository.AuthRepository
+import com.example.literalkids.data.repository.StoryRepository
 import com.example.literalkids.navigation.Screen
 import com.example.literalkids.viewmodel.HomepageViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.literalkids.data.model.HomeUser
+import com.example.literalkids.data.model.HomeUserResponse
 import com.example.literalkids.ui.navbar.BottomNavigation
+import com.example.literalkids.ui.theme.LiteralkidsTheme
+import retrofit2.Response
 
 @Composable
 fun HomepageUI(
@@ -529,5 +541,66 @@ fun HeroSliderSection(bannerImages: List<Int>) {
             activeColor = Color(0xFF5AD8FF),
             inactiveColor = Color(0xFFDFF5FF)
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HomepageUIPreview() {
+    val navController = rememberNavController()
+    val context = LocalContext.current
+
+    // --- 1. Create Fake Data Sources That Return Sample Data ---
+
+    // Fake ApiService that returns a successful user response immediately.
+    val fakeApiService = object : ApiService {
+        override suspend fun getHomepageUser(userId: Long): Response<HomeUserResponse> {
+            val fakeUser = HomeUser(
+                userId = 1L,
+                name = "Preview User",
+                username = "@preview",
+                level = 5,
+                progress = 0.75f,
+                isSynced = true
+            )
+            val fakeResponse = HomeUserResponse(user = fakeUser)
+            return Response.success(fakeResponse)
+        }
+        override suspend fun login(loginRequest: com.example.literalkids.data.model.LoginRequest): Response<com.example.literalkids.data.model.LoginResponse> = TODO()
+        override suspend fun register(registerRequest: com.example.literalkids.data.model.RegisterRequest): Response<com.example.literalkids.data.model.RegisterResponse> = TODO()
+        override suspend fun submitOnboardingData(onboardingData: com.example.literalkids.data.model.OnboardingModel): Response<com.example.literalkids.data.model.OnboardingResponse> = TODO()
+        override suspend fun syncUserData(userId: Long, syncData: com.example.literalkids.data.network.UserSyncRequest): Response<Unit> = TODO()
+    }
+
+    // Fake UserDao that does nothing, as we are simulating an online state.
+    val fakeUserDao = object : UserDao {
+        override suspend fun insertOrUpdateUser(user: HomeUser) {}
+        override suspend fun getUserById(userId: Long): HomeUser? = null
+        override suspend fun getUnsyncedUsers(): List<HomeUser> = emptyList()
+        override suspend fun deleteUser(userId: Long) {}
+    }
+
+    // --- 2. Create Real Repositories Using the Fake Sources ---
+    val fakeStoryRepository = StoryRepository(apiService = fakeApiService, userDao = fakeUserDao)
+
+    // --- PERBAIKAN DI SINI ---
+    // Buat AuthRepository palsu yang akan mengoverride fungsinya
+    val fakeAuthRepository = object : AuthRepository(apiService = fakeApiService, tokenManager = TokenManager(context)) {
+        // Override fungsi ini untuk selalu mengembalikan ID palsu
+        override fun getLoggedInUserId(): Long? {
+            return 1L // Simulasikan bahwa pengguna dengan ID 1 sudah login
+        }
+    }
+
+    // --- 3. Create the Real ViewModel with the Fake Repositories ---
+    // The ViewModel's init block will now run safely with our fake data.
+    val viewModel = HomepageViewModel(
+        storyRepository = fakeStoryRepository,
+        authRepository = fakeAuthRepository
+    )
+
+    // --- 4. Render the UI with a Theme ---
+    LiteralkidsTheme(false) {
+        HomepageUI(navController = navController, viewModel = viewModel)
     }
 }

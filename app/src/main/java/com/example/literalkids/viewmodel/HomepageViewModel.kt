@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.literalkids.R
 import com.example.literalkids.data.model.HomepageUiState
+import com.example.literalkids.data.repository.AuthRepository
 import com.example.literalkids.data.repository.DataResult
 import com.example.literalkids.data.repository.StoryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +13,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class HomepageViewModel(private val storyRepository: StoryRepository) : ViewModel() {
+class HomepageViewModel(
+    private val storyRepository: StoryRepository,
+    private val authRepository: AuthRepository
+) : ViewModel() {
     private val _uiState = MutableStateFlow(HomepageUiState(isLoading = true))
     val uiState: StateFlow<HomepageUiState> = _uiState.asStateFlow()
 
@@ -25,7 +29,13 @@ class HomepageViewModel(private val storyRepository: StoryRepository) : ViewMode
         _uiState.value = HomepageUiState(isLoading = true)
 
         viewModelScope.launch {
-            val userId = 2L
+            val userId = authRepository.getLoggedInUserId()
+
+            if (userId == null) {
+                // Jika tidak ada ID, berarti user belum login, tampilkan error
+                _uiState.value = HomepageUiState(isLoading = false, error = "Sesi tidak ditemukan. Silakan login ulang.")
+                return@launch
+            }
 
             // Panggil repository untuk mengambil data pengguna
             when (val result = storyRepository.getHomepageUser(userId)) {
@@ -65,11 +75,14 @@ class HomepageViewModel(private val storyRepository: StoryRepository) : ViewMode
     }
 }
 
-class HomepageViewModelFactory(private val storyRepository: StoryRepository) : ViewModelProvider.Factory {
+class HomepageViewModelFactory(
+    private val storyRepository: StoryRepository,
+    private val authRepository: AuthRepository
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(HomepageViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return HomepageViewModel(storyRepository) as T
+            return HomepageViewModel(storyRepository, authRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

@@ -17,7 +17,7 @@ sealed class AuthResult {
 }
 
 // Repository bergantung pada ApiService dan TokenManager (ini disebut Dependency Injection)
-class AuthRepository(
+open class AuthRepository(
     private val apiService: ApiService,
     private val tokenManager: TokenManager
 ) {
@@ -36,6 +36,7 @@ class AuthRepository(
                     // 3. Jika berhasil, SIMPAN TOKEN!
                     tokenManager.saveToken(loginResponse.token)
                     Log.i("AuthRepository", "Login successful, token saved.")
+                    tokenManager.saveUserId(loginResponse.user.id)
                     return AuthResult.Success
                 } else {
                     // Ini jarang terjadi, tapi sebagai pengaman
@@ -84,6 +85,10 @@ class AuthRepository(
         }
     }
 
+    open fun getLoggedInUserId(): Long? {
+        return tokenManager.getUserId()
+    }
+
     suspend fun submitOnboarding(data: OnboardingModel): AuthResult { // Kita bisa pakai ulang sealed class AuthResult
         return try {
             // 1. Panggil fungsi dari ApiService
@@ -91,8 +96,15 @@ class AuthRepository(
 
             // 2. Cek apakah sukses
             if (response.isSuccessful) {
-                Log.i("AuthRepository", "Onboarding data submitted successfully.")
-                AuthResult.Success
+                val onboardingResponse = response.body()
+                if (onboardingResponse != null) {
+                    // Setelah onboarding, simpan ID yang dikembalikan oleh server
+                    tokenManager.saveUserId(onboardingResponse.id) // <-- Simpan ID
+                    return AuthResult.Success
+                } else {
+                    Log.e("AuthRepository", "Onboarding response body is null.")
+                    return AuthResult.Failure("Respon tidak valid dari server.")
+                }
             } else {
                 // 3. Jika gagal, parse errornya
                 val responseCode = response.code()

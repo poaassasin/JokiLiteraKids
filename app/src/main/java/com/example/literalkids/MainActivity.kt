@@ -93,7 +93,7 @@ fun MainNavigation() {
     val authRepository = AuthRepository(apiService, tokenManager)
 
     val storyRepository = StoryRepository(apiService, userDao)
-    val homepageViewModelFactory = HomepageViewModelFactory(storyRepository)
+    val homepageViewModelFactory = HomepageViewModelFactory(storyRepository, authRepository)
 
     // 3. Buat Factory yang akan digunakan untuk membuat ViewModel
     val loginViewModelFactory = LoginViewModelFactory(authRepository)
