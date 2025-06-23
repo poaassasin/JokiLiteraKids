@@ -14,6 +14,12 @@ sealed class Screen(val route: String) {
     object GenreSelector : Screen("genre/{genre}") {
         fun createRoute(genre: String) = "genre/$genre"
     }
+
+    object StoryDetail : Screen("storyDetail/{storyId}") {
+        // Fungsi helper untuk membuat rute dengan ID yang spesifik
+        fun createRoute(storyId: Int) = "storyDetail/$storyId"
+    }
+
     object Search : Screen ("search")
     object Quiz : Screen ("book_quiz")
     object HomeBacaCerita : Screen ("home_baca")

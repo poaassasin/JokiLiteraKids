@@ -25,7 +25,7 @@ class HomepageViewModel(private val storyRepository: StoryRepository) : ViewMode
         _uiState.value = HomepageUiState(isLoading = true)
 
         viewModelScope.launch {
-            val userId = 1L
+            val userId = 2L
 
             // Panggil repository untuk mengambil data pengguna
             when (val result = storyRepository.getHomepageUser(userId)) {

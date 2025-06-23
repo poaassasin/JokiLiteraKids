@@ -77,13 +77,15 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-pager:0.32.0")
     implementation ("com.google.accompanist:accompanist-pager-indicators:0.32.0")
 
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
     // Navigation Compose (PENTING!)
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
     // Database
-    implementation ("androidx.room:room-runtime:2.6.1")
-    implementation ("androidx.room:room-ktx:2.6.1")
-    kapt ("androidx.room:room-compiler:2.6.1")
+    implementation ("androidx.room:room-runtime:2.7.0")
+    implementation ("androidx.room:room-ktx:2.7.0")
+    kapt ("androidx.room:room-compiler:2.7.0")
     implementation ("com.google.dagger:hilt-android:2.51.1")
     kapt ("com.google.dagger:hilt-compiler:2.51.1")
 

@@ -11,7 +11,13 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.GET
+import retrofit2.http.PUT
 import retrofit2.http.Path
+
+data class UserSyncRequest(
+    val level: Int,
+    val progress: Float
+)
 
 interface ApiService {
 
@@ -27,4 +33,10 @@ interface ApiService {
 
     @GET("homepage/{id}")
     suspend fun getHomepageUser(@Path("id") userId: Long): Response<HomeUserResponse>
+
+    @PUT("homepage/sync/{id}")
+    suspend fun syncUserData(
+        @Path("id") userId: Long,
+        @Body syncData: UserSyncRequest
+    ): Response<Unit>
 }

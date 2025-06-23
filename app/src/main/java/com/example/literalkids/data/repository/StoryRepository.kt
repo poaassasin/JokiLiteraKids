@@ -4,12 +4,17 @@ import com.example.literalkids.data.model.Story
 import com.example.literalkids.R
 import com.example.literalkids.data.model.HomeUser
 import android.util.Log
+import com.example.literalkids.data.local.UserDao
 import com.example.literalkids.data.model.ApiErrorResponse
 import com.example.literalkids.data.network.ApiService
+import com.example.literalkids.data.network.UserSyncRequest
 import com.example.literalkids.data.repository.DataResult // Pastikan import ini benar
 import com.google.gson.Gson
 
-class StoryRepository(private val apiService: ApiService) {
+class StoryRepository(
+    private val apiService: ApiService,
+    private val userDao: UserDao
+) {
     fun getStories(): List<Story> {
         return listOf(
             Story(1, "Si Kancil dan Buaya", R.drawable.kancil_buaya, 0.8f, "Fabel", "4,2 Ribu Dibaca"),
@@ -30,31 +35,78 @@ class StoryRepository(private val apiService: ApiService) {
 
             // Cek jika respon dari server sukses (HTTP code 2xx)
             if (response.isSuccessful) {
-                // Ambil '.user' dari body karena respon JSON-nya di-wrap: { "user": {...} }
-                val user = response.body()?.user
-                if (user != null) {
+                val userFromApi = response.body()?.user
+                if (userFromApi != null) {
+                    userFromApi.userId = userId
+
+                    Log.d("StoryRepository", "Data user dari API berhasil diambil. Menyimpan ke cache...")
+                    userDao.insertOrUpdateUser(userFromApi)
+
                     // Jika sukses dan data ada, kembalikan data pengguna
-                    return DataResult.Success(user)
+                    return DataResult.Success(userFromApi)
                 } else {
                     // Handle kasus aneh di mana respon sukses tapi body-nya kosong
                     return DataResult.Failure("Data pengguna tidak ditemukan dalam respon.")
                 }
-            } else {
-                // Handle jika server merespon dengan error (HTTP code 4xx atau 5xx)
-                val errorBody = response.errorBody()?.string()
-                val errorMessage = try {
-                    // Coba parse pesan error dari JSON server
-                    Gson().fromJson(errorBody, ApiErrorResponse::class.java).message
-                } catch (e: Exception) {
-                    // Pesan fallback jika parsing JSON error gagal
-                    "Gagal mengambil data pengguna"
-                }
-                return DataResult.Failure(errorMessage)
             }
+            return fetchUserFromCache(userId, "Gagal mengambil data dari server.")
         } catch (e: Exception) {
             // Handle jika terjadi error jaringan (tidak ada internet, timeout, dll.)
-            Log.e("StoryRepository", "Error Jaringan saat mengambil data user: ${e.message}", e)
-            return DataResult.NetworkError
+            Log.w("StoryRepository", "Koneksi ke API gagal. Mencoba mengambil dari cache lokal...")
+            return fetchUserFromCache(userId, "Anda sedang offline. Menampilkan data terakhir.")
+        }
+    }
+
+    suspend fun syncOfflineData() {
+        // 1. Ambil semua data 'kotor' dari Room
+        val unsyncedUsers = userDao.getUnsyncedUsers() // Anda perlu membuat query ini di UserDao
+
+        for (user in unsyncedUsers) {
+            // --- PERBAIKAN DI SINI ---
+            // 2. Buat objek UserSyncRequest terlebih dahulu
+            val syncRequest = UserSyncRequest(level = user.level, progress = user.progress)
+
+            // 3. Kirim objek tersebut sebagai parameter kedua
+            val updateResponse = apiService.syncUserData(user.userId, syncRequest)
+            // --- SELESAI PERBAIKAN ---
+
+            if (updateResponse.isSuccessful) {
+                // 4. Jika API sukses, tandai data sebagai 'sudah sinkron'
+                val syncedUser = user.copy(isSynced = true)
+                userDao.insertOrUpdateUser(syncedUser)
+                Log.d("StoryRepository", "User ${user.userId} synced successfully.")
+            } else {
+                Log.e("StoryRepository", "Failed to sync user ${user.userId}.")
+                // Anda bisa menambahkan logika error handling di sini
+            }
+        }
+    }
+
+
+
+    suspend fun updateUserProgressOffline(userId: Long, newProgress: Float) {
+        // 1. Ambil data user saat ini dari cache
+        val currentUser = userDao.getUserById(userId)
+        if (currentUser != null) {
+            // 2. Buat objek baru dengan progres yang diperbarui dan tandai sebagai 'belum sinkron'
+            val updatedUser = currentUser.copy(
+                progress = newProgress,
+                isSynced = false // Data ini 'kotor'
+            )
+            // 3. Simpan kembali ke database Room
+            userDao.insertOrUpdateUser(updatedUser)
+        }
+    }
+
+    private suspend fun fetchUserFromCache(userId: Long, failureMessage: String): DataResult<HomeUser> {
+        val cachedUser = userDao.getUserById(userId)
+        return if (cachedUser != null) {
+            // LANGKAH 2: Response lokal ditampilkan di UI
+            Log.d("StoryRepository", "Berhasil mengambil data user dari cache.")
+            DataResult.Success(cachedUser)
+        } else {
+            // Jika di cache juga tidak ada, baru kita menyerah
+            DataResult.Failure(failureMessage)
         }
     }
 

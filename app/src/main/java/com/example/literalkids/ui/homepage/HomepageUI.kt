@@ -337,7 +337,9 @@ fun HomepageUI(
                             category = story.category,
                             title = story.title,
                             views = story.views,
-                            onClick = { navController.navigate("storyReader/${story.id}") }
+                            onClick = {
+                                navController.navigate(Screen.StoryDetail.createRoute(story.id))
+                            }
                         )
                     }
                 }
