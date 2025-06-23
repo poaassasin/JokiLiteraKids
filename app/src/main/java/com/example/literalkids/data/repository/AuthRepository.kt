@@ -31,26 +31,35 @@ open class AuthRepository(
             // 2. Cek apakah panggilan API berhasil (status code 2xx)
             if (response.isSuccessful) {
                 val loginResponse = response.body()
-                // Pastikan body respon tidak kosong
-                if (loginResponse != null) {
-                    // 3. Jika berhasil, SIMPAN TOKEN!
+
+                loginResponse?.user?.let { user ->
+                    // Jika user tidak null, simpan token dan ID
                     tokenManager.saveToken(loginResponse.token)
-                    Log.i("AuthRepository", "Login successful, token saved.")
-                    tokenManager.saveUserId(loginResponse.user.id)
+                    tokenManager.saveUserId(user.id)
                     return AuthResult.Success
-                } else {
-                    // Ini jarang terjadi, tapi sebagai pengaman
-                    Log.e("AuthRepository", "Login response body is null.")
-                    return AuthResult.Failure("Respon tidak valid dari server.")
                 }
+                // Jika sampai sini, berarti ada masalah dengan respon server
+                return AuthResult.Failure("Gagal memproses data login.")
+
+                // Pastikan body respon tidak kosong
+//                if (loginResponse != null) {
+//                    // 3. Jika berhasil, SIMPAN TOKEN!
+//                    tokenManager.saveToken(loginResponse.token)
+//                    Log.i("AuthRepository", "Login successful, token saved.")
+//                    tokenManager.saveUserId(loginResponse.user.id)
+//                    return AuthResult.Success
+//                } else {
+//                    // Ini jarang terjadi, tapi sebagai pengaman
+//                    Log.e("AuthRepository", "Login response body is null.")
+//                    return AuthResult.Failure("Respon tidak valid dari server.")
+//                }
             } else {
                 // 4. Jika gagal (status code 4xx atau 5xx), parse pesan error dari server
                 val errorBody = response.errorBody()?.string()
                 val errorMessage = try {
-                    // Kita gunakan model ApiErrorResponse yang sudah dibuat
                     Gson().fromJson(errorBody, ApiErrorResponse::class.java).message
                 } catch (e: Exception) {
-                    "Email atau password salah" // Pesan default jika parsing gagal
+                    "Email atau password salah"
                 }
                 Log.w("AuthRepository", "Login failed: $errorMessage")
                 return AuthResult.Failure(errorMessage)

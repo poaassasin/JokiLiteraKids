@@ -7,7 +7,10 @@ data class UserLoginInfo(
     val id: Long,
 
     @SerializedName("email")
-    val email: String
+    val email: String,
+
+    @SerializedName("name")
+    val name: String?
 )
 
 data class LoginResponse(

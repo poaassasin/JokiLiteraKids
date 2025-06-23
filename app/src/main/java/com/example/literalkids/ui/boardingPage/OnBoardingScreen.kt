@@ -541,7 +541,7 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                         }
                     }
 
-                    if (page >= 2) {
+                    if (page == 2) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = "Lewati",
@@ -549,6 +549,24 @@ fun OnboardingScreen(navController: NavController, viewModel: OnboardingViewMode
                             fontWeight = FontWeight.Medium,
                             color = Color(0xFF5AD8FF),
                             modifier = Modifier.clickable {
+                                // Aksi: Cukup pindah ke halaman berikutnya (halaman Beli)
+                                coroutineScope.launch {
+                                    viewModel.nextPage()
+                                    pagerState.animateScrollToPage(3)
+                                }
+                            }
+                        )
+                    }
+
+                    if (page == 3) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Lewati",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF5AD8FF),
+                            modifier = Modifier.clickable {
+                                // Aksi: Selesaikan onboarding dengan menandakan langganan dilewati
                                 viewModel.completeOnboarding(isSkippingSubscription = true)
                             }
                         )
